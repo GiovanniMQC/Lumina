@@ -7,6 +7,10 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+  /* Remove o destaque azul/laranja ao clicar no mobile */
+  -webkit-tap-highlight-color: transparent;
+  /* Remove contorno de foco padrão (substituído por nossos estilos) */
+  outline: none;
 }
 
 :root {
@@ -712,6 +716,38 @@ html, body {
   50%       { opacity: 1;   transform: scale(1.5); }
 }
 
+/* ── Weather Emoji Animations ─────────────────────────────── */
+@keyframes wx-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes wx-shake {
+  0%, 100% { transform: translateX(0) rotate(0deg); }
+  20%       { transform: translateX(-4px) rotate(-4deg); }
+  40%       { transform: translateX(4px)  rotate(4deg); }
+  60%       { transform: translateX(-3px) rotate(-2deg); }
+  80%       { transform: translateX(3px)  rotate(2deg); }
+}
+@keyframes wx-flash {
+  0%, 100% { opacity: 1;   transform: scale(1); filter: brightness(1); }
+  45%       { opacity: 0.7; transform: scale(0.95); filter: brightness(0.8); }
+  50%       { opacity: 1;   transform: scale(1.15); filter: brightness(1.8) drop-shadow(0 0 12px #fff); }
+  55%       { opacity: 0.8; transform: scale(1); filter: brightness(1); }
+}
+@keyframes wx-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50%       { transform: translateY(-10px) rotate(2deg); }
+}
+@keyframes wx-pulse-opacity {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.05); }
+}
+@keyframes wx-sway {
+  0%, 100% { transform: translateX(0); }
+  33%       { transform: translateX(-6px); }
+  66%       { transform: translateX(6px); }
+}
+
 @keyframes track-enter {
   from {
     opacity: 0;
@@ -1210,6 +1246,55 @@ body.no-karaoke .lyric-line.upcoming {
   padding: var(--space-xl);
   gap: var(--space-lg);
   overflow-y: auto;
+  position: relative; /* needed for absolute canvas */
+}
+
+/* Canvas de partículas — cobre toda a página de clima */
+#weather-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Overlay de gradiente temático */
+#weather-bg-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  transition: background 2s ease;
+}
+
+/* Garante que o conteúdo fique acima do canvas */
+#weather-page > *:not(#weather-canvas):not(#weather-bg-overlay) {
+  position: relative;
+  z-index: 2;
+}
+
+/* ── Gradientes por condição ──────────────────────────────── */
+#weather-bg-overlay.wx-clear-day {
+  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 200, 50, 0.15) 0%, transparent 70%);
+}
+#weather-bg-overlay.wx-clear-night {
+  background: radial-gradient(ellipse 60% 50% at 80% 10%, rgba(100, 130, 255, 0.12) 0%, transparent 70%);
+}
+#weather-bg-overlay.wx-cloudy {
+  background: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(150, 160, 190, 0.10) 0%, transparent 70%);
+}
+#weather-bg-overlay.wx-rain {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(60, 100, 180, 0.18) 0%, transparent 70%);
+}
+#weather-bg-overlay.wx-storm {
+  background: radial-gradient(ellipse 80% 70% at 50% 0%, rgba(80, 30, 160, 0.22) 0%, transparent 70%);
+}
+#weather-bg-overlay.wx-snow {
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 210, 255, 0.15) 0%, transparent 70%);
+}
+#weather-bg-overlay.wx-fog {
+  background: radial-gradient(ellipse 100% 80% at 50% 30%, rgba(140, 150, 170, 0.15) 0%, transparent 70%);
 }
 
 #weather-clock-widget {
@@ -1240,11 +1325,12 @@ body.no-karaoke .lyric-line.upcoming {
 }
 
 #weather-content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-lg);
-  padding-top: var(--space-2xl);
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: var(--space-md);
+  padding-top: calc(var(--space-2xl) + 8px);
   height: 100%;
+  overflow: hidden;
 }
 
 #weather-header {
@@ -1269,87 +1355,105 @@ body.no-karaoke .lyric-line.upcoming {
   font-family: var(--font-mono);
 }
 
-/* Temperatura principal */
+/* Temperatura principal — hero em linha (emoji + temp lado a lado) */
 #weather-main {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-lg);
   animation: slideUp 0.6s var(--transition-spring) both;
 }
 
 #weather-emoji {
-  font-size: clamp(3rem, 8vw, 6rem);
+  font-size: clamp(4rem, 12vw, 8rem);
   line-height: 1;
-  filter: drop-shadow(0 4px 16px rgba(0 0 0 / 0.4));
+  filter: drop-shadow(0 4px 24px rgba(0 0 0 / 0.5));
+  flex-shrink: 0;
+  display: inline-block;
+}
+
+#weather-temp-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 #weather-temp-display {
   font-family: var(--font-display);
-  font-size: clamp(4rem, 12vw, 9rem);
+  font-size: clamp(4.5rem, 14vw, 10rem);
   font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 1;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
   color: var(--clr-text);
-  text-shadow: 0 0 60px rgba(255 255 255 / 0.1);
+  text-shadow: 0 0 80px rgba(255 255 255 / 0.12);
 }
 
 #weather-desc-text {
   font-family: var(--font-body);
-  font-size: clamp(1rem, 2vw, 1.4rem);
+  font-size: clamp(1rem, 2.2vw, 1.5rem);
   font-weight: 400;
   color: var(--clr-text-muted);
   letter-spacing: 0.02em;
 }
 
-/* Stats grid */
+/* Stats grid — linha única de pills */
 #weather-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-md);
+  gap: var(--space-sm);
   flex-shrink: 0;
 }
 
 .weather-stat-card {
-  background: rgba(255 255 255 / 0.06);
-  border: 1px solid rgba(255 255 255 / 0.08);
-  border-radius: var(--radius-md);
-  padding: var(--space-md) var(--space-lg);
+  background: rgba(255 255 255 / 0.07);
+  border: 1px solid rgba(255 255 255 / 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  backdrop-filter: blur(12px);
-  transition: background var(--transition-fast);
+  gap: 4px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
 .weather-stat-card:hover {
-  background: rgba(255 255 255 / 0.09);
+  background: rgba(255 255 255 / 0.12);
+  transform: translateY(-2px);
 }
 
 .weather-stat-card .stat-label {
-  font-size: 0.7rem;
-  font-weight: 500;
+  font-size: 0.65rem;
+  font-weight: 600;
   color: var(--clr-text-faint);
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
 }
 
 .weather-stat-card .stat-value {
   font-family: var(--font-display);
-  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  font-size: clamp(1.1rem, 2.2vw, 1.6rem);
   font-weight: 700;
   color: var(--clr-text);
   letter-spacing: -0.01em;
 }
 
-/* Previsão horária */
+/* Prévisão horária — scroll horizontal com snap */
 #weather-hourly-wrapper {
   overflow-x: auto;
   overflow-y: hidden;
   flex-shrink: 0;
+  /* tira o padding lateral para a barra ir de ponta a ponta */
   margin: 0 calc(-1 * var(--space-xl));
-  padding: 0 var(--space-xl);
+  padding: 0 var(--space-xl) var(--space-md);
+  /* momentum scroll no iOS */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  /* esconde a scrollbar mas permite rolar */
+  scrollbar-width: none;
+  touch-action: pan-x;
 }
+#weather-hourly-wrapper::-webkit-scrollbar { display: none; }
 
 #weather-hourly {
   display: flex;
@@ -1525,25 +1629,20 @@ body.no-karaoke .lyric-line.upcoming {
   }
 
   #weather-page {
-    flex-direction: row;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    /* Em landscape o weather-page já é flex coluna */
   }
 
   #weather-content {
-    flex-direction: row;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: var(--space-xl);
+    grid-template-rows: auto auto 1fr auto;
     padding-top: var(--space-2xl);
   }
 
   #weather-main {
-    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
   }
 
   #weather-stats {
-    flex: 1;
-    align-content: flex-start;
+    grid-template-columns: repeat(4, 1fr);
   }
 }

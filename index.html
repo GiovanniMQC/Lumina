@@ -112,8 +112,13 @@
 
         </div><!-- /player-page -->
 
-        <!-- ── Página 1: Clima ───────────────────────────────── -->
+        <!-- ── Página 1: Clima ─────────────────────── -->
         <div class="swipe-page" id="weather-page">
+
+          <!-- Canvas para partículas animadas (chuva, neve, sol, vento) -->
+          <canvas id="weather-canvas"></canvas>
+          <!-- Overlay de gradiente dependente do clima -->
+          <div id="weather-bg-overlay"></div>
 
           <!-- Relógio no canto do clima -->
           <div id="weather-clock-widget">
@@ -137,8 +142,10 @@
             <!-- Temperatura principal -->
             <div id="weather-main">
               <div id="weather-emoji">🌤️</div>
-              <div id="weather-temp-display">--°</div>
-              <div id="weather-desc-text">--</div>
+              <div id="weather-temp-block">
+                <div id="weather-temp-display">--°</div>
+                <div id="weather-desc-text">--</div>
+              </div>
             </div>
 
             <!-- Stats grid -->

@@ -159,6 +159,220 @@ async function fetchWeatherData(lat: number, lon: number): Promise<WeatherData> 
   }
 }
 
+// ── Weather Animation Engine ──────────────────────────────────
+
+type WeatherEffect = 'rain' | 'drizzle' | 'snow' | 'fog' | 'storm' | 'clear-day' | 'clear-night' | 'cloudy' | 'none'
+
+let _animRaf = 0
+
+function wmoToEffect(code: number): WeatherEffect {
+  if ([0, 1].includes(code)) {
+    const hour = new Date().getHours()
+    return hour >= 6 && hour < 20 ? 'clear-day' : 'clear-night'
+  }
+  if ([2, 3].includes(code))           return 'cloudy'
+  if ([45, 48].includes(code))         return 'fog'
+  if ([51, 53, 55].includes(code))     return 'drizzle'
+  if ([61, 63, 65, 80, 81, 82].includes(code)) return 'rain'
+  if ([71, 73, 75, 77, 85, 86].includes(code)) return 'snow'
+  if ([95, 96, 99].includes(code))     return 'storm'
+  return 'none'
+}
+
+function effectToBgClass(e: WeatherEffect): string {
+  const map: Record<WeatherEffect, string> = {
+    'clear-day':   'wx-clear-day',
+    'clear-night': 'wx-clear-night',
+    'cloudy':      'wx-cloudy',
+    'drizzle':     'wx-rain',
+    'rain':        'wx-rain',
+    'storm':       'wx-storm',
+    'snow':        'wx-snow',
+    'fog':         'wx-fog',
+    'none':        '',
+  }
+  return map[e] ?? ''
+}
+
+function applyWeatherAnimation(effect: WeatherEffect): void {
+  const canvas = document.getElementById('weather-canvas') as HTMLCanvasElement | null
+  const overlay = document.getElementById('weather-bg-overlay')
+  const emojiEl = document.getElementById('weather-emoji')
+
+  // Aplica gradiente de fundo
+  if (overlay) {
+    overlay.className = ''
+    const cls = effectToBgClass(effect)
+    if (cls) overlay.classList.add(cls)
+  }
+
+  // Aplica animacao no emoji
+  if (emojiEl) {
+    emojiEl.style.animation = ''
+    void emojiEl.offsetWidth // force reflow
+    if (effect === 'clear-day')       emojiEl.style.animation = 'wx-spin 20s linear infinite'
+    else if (effect === 'rain' || effect === 'drizzle') emojiEl.style.animation = 'wx-shake 1.2s ease-in-out infinite'
+    else if (effect === 'storm')      emojiEl.style.animation = 'wx-flash 1.8s ease-in-out infinite'
+    else if (effect === 'snow')       emojiEl.style.animation = 'wx-float 3s ease-in-out infinite'
+    else if (effect === 'fog')        emojiEl.style.animation = 'wx-pulse-opacity 3s ease-in-out infinite'
+    else if (effect === 'cloudy')     emojiEl.style.animation = 'wx-sway 4s ease-in-out infinite'
+  }
+
+  if (!canvas) return
+
+  cancelAnimationFrame(_animRaf)
+
+  const ctx = canvas.getContext('2d')
+  if (!ctx) return
+
+  // Fit canvas to parent
+  const resize = () => {
+    canvas.width  = canvas.offsetWidth
+    canvas.height = canvas.offsetHeight
+  }
+  resize()
+
+  if (effect === 'none' || effect === 'cloudy' || effect === 'clear-night' || effect === 'clear-day') {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+    if (effect === 'clear-day') startSunRays(canvas, ctx)
+    return
+  }
+
+  if (effect === 'rain' || effect === 'drizzle' || effect === 'storm') startRain(canvas, ctx, effect)
+  else if (effect === 'snow')   startSnow(canvas, ctx)
+  else if (effect === 'fog')    startFog(canvas, ctx)
+}
+
+// ── Sun Rays ──────────────────────────────────────────────────
+function startSunRays(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
+  const NUM_RAYS = 12
+  let rotation = 0
+
+  const draw = () => {
+    const w = canvas.offsetWidth
+    const h = canvas.offsetHeight
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w
+      canvas.height = h
+    }
+    ctx.clearRect(0, 0, w, h)
+
+    // Centro do sol: canto superior direito (onde fica o emoji do sol)
+    const cx = w * 0.78
+    const cy = h * 0.10
+
+    const maxLen = Math.max(w, h) * 1.2
+    rotation += 0.002 // rotação lenta
+
+    for (let i = 0; i < NUM_RAYS; i++) {
+      const angle = rotation + (i / NUM_RAYS) * Math.PI * 2
+      const halfWidth = Math.PI / NUM_RAYS / 2 // meio ângulo de cada raio
+
+      const grd = ctx.createLinearGradient(cx, cy, cx + Math.cos(angle) * maxLen, cy + Math.sin(angle) * maxLen)
+      grd.addColorStop(0,   'rgba(255, 220, 80, 0.12)')
+      grd.addColorStop(0.4, 'rgba(255, 200, 50, 0.06)')
+      grd.addColorStop(1,   'rgba(255, 180, 30, 0)')
+
+      ctx.beginPath()
+      ctx.moveTo(cx, cy)
+      ctx.arc(cx, cy, maxLen, angle - halfWidth, angle + halfWidth)
+      ctx.closePath()
+      ctx.fillStyle = grd
+      ctx.fill()
+    }
+
+    _animRaf = requestAnimationFrame(draw)
+  }
+  draw()
+}
+
+// ── Rain / Storm ──────────────────────────────────────────────
+function startRain(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, type: WeatherEffect): void {
+  const count = type === 'drizzle' ? 60 : type === 'storm' ? 180 : 120
+  const angleX = type === 'storm' ? 3 : 1
+  const drops = Array.from({ length: count }, () => ({
+    x: Math.random() * 1200,
+    y: Math.random() * 900,
+    speed: 8 + Math.random() * 10,
+    len:   12 + Math.random() * 16,
+    alpha: 0.2 + Math.random() * 0.3,
+  }))
+  const draw = () => {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight
+    if (canvas.width !== w) { canvas.width = w; canvas.height = h }
+    ctx.clearRect(0, 0, w, h)
+    drops.forEach(d => {
+      ctx.beginPath()
+      ctx.moveTo(d.x, d.y)
+      ctx.lineTo(d.x + angleX * 2, d.y + d.len)
+      ctx.strokeStyle = `rgba(160, 200, 255, ${d.alpha})`
+      ctx.lineWidth   = type === 'drizzle' ? 0.8 : 1.2
+      ctx.stroke()
+      d.y += d.speed
+      d.x += angleX
+      if (d.y > h) { d.y = -20; d.x = Math.random() * w }
+    })
+    _animRaf = requestAnimationFrame(draw)
+  }
+  draw()
+}
+
+// ── Snow ──────────────────────────────────────────────────────
+function startSnow(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
+  const flakes = Array.from({ length: 80 }, () => ({
+    x:     Math.random() * 1200,
+    y:     Math.random() * 900,
+    r:     1.5 + Math.random() * 3,
+    speed: 0.5 + Math.random() * 1.5,
+    drift: (Math.random() - 0.5) * 0.5,
+    alpha: 0.4 + Math.random() * 0.4,
+    t:     Math.random() * Math.PI * 2,
+  }))
+  const draw = () => {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight
+    if (canvas.width !== w) { canvas.width = w; canvas.height = h }
+    ctx.clearRect(0, 0, w, h)
+    flakes.forEach(f => {
+      f.t += 0.01
+      f.x += f.drift + Math.sin(f.t) * 0.3
+      f.y += f.speed
+      ctx.beginPath()
+      ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2)
+      ctx.fillStyle = `rgba(220, 235, 255, ${f.alpha})`
+      ctx.fill()
+      if (f.y > h) { f.y = -10; f.x = Math.random() * w }
+    })
+    _animRaf = requestAnimationFrame(draw)
+  }
+  draw()
+}
+
+// ── Fog ───────────────────────────────────────────────────────
+function startFog(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
+  const layers = Array.from({ length: 5 }, (_, i) => ({
+    y:     80 + i * 60,
+    speed: 0.2 + i * 0.1,
+    alpha: 0.04 + i * 0.015,
+    offset: 0,
+  }))
+  const draw = () => {
+    const w = canvas.offsetWidth, h = canvas.offsetHeight
+    if (canvas.width !== w) { canvas.width = w; canvas.height = h }
+    ctx.clearRect(0, 0, w, h)
+    layers.forEach(l => {
+      l.offset = (l.offset + l.speed) % (w * 2)
+      const grd = ctx.createLinearGradient(0, l.y - 30, 0, l.y + 30)
+      grd.addColorStop(0,   `rgba(180,190,210,0)`)
+      grd.addColorStop(0.5, `rgba(180,190,210,${l.alpha})`)
+      grd.addColorStop(1,   `rgba(180,190,210,0)`)
+      ctx.fillStyle = grd
+      ctx.fillRect(-(w) + l.offset, l.y - 30, w * 2, 60)
+    })
+    _animRaf = requestAnimationFrame(draw)
+  }
+  draw()
+}
+
 // ── UI Rendering ──────────────────────────────────────────────
 
 function renderWeather(d: WeatherData): void {
@@ -177,6 +391,9 @@ function renderWeather(d: WeatherData): void {
   // Mini-clima no player (abaixo do relógio)
   setText('mini-weather-emoji', wmo.emoji)
   setText('mini-weather-temp',  `${d.temp}° ${wmo.desc}`)
+
+  // Animação de fundo baseada no código WMO
+  applyWeatherAnimation(wmoToEffect(d.weatherCode))
 
   // Hourly forecast
   const hourlyEl = document.getElementById('weather-hourly')
