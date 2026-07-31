@@ -48,6 +48,7 @@ import { initClock }      from './clock'
 import { initNavigation } from './navigation'
 import { initWeather }    from './weather'
 import { initFullscreen } from './fullscreen'
+import { initAmoled }     from './amoled'
 import { initSettings, setOnSettingsSaved } from './settings'
 import { loadImmichAssets, startSlideshow, stopSlideshow } from './immich'
 import { initWakeLock, updateWakeLock } from './wakelock'
@@ -183,6 +184,7 @@ async function bootstrap(): Promise<void> {
   initFullscreen()
   initSettings()
   initWakeLock()
+  initAmoled()
 
   setOnSettingsSaved(() => {
     loadImmichAssets()

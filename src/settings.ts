@@ -18,6 +18,9 @@ export interface AppSettings {
   karaokeMode: boolean // true = destaque por palavra, false = apenas linha
   keepScreenOn: boolean // true = impede a tela de desligar
   photoModeLyrics: boolean // true = mostra a linha atual da letra no canto inferior no modo foto
+  amoledMode: boolean // true = tela preta com apenas relógio à noite
+  amoledStartTime: string // ex: "22:00"
+  amoledEndTime: string // ex: "06:00"
 }
 
 const STORAGE_KEY = 'tabhub_settings'
@@ -30,6 +33,9 @@ const DEFAULTS: AppSettings = {
   karaokeMode:       true,
   keepScreenOn:      false,
   photoModeLyrics:   true,
+  amoledMode:        true,
+  amoledStartTime:   '22:00',
+  amoledEndTime:     '06:00',
 }
 
 // ── Leitura / Escrita ─────────────────────────────────────────
@@ -162,6 +168,9 @@ function populateFields(): void {
   const karaokeToggle = document.getElementById('settings-karaoke') as HTMLInputElement | null
   const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
   const photoLyricsToggle = document.getElementById('settings-photo-lyrics') as HTMLInputElement | null
+  const amoledToggle = document.getElementById('settings-amoled') as HTMLInputElement | null
+  const amoledStart = document.getElementById('settings-amoled-start') as HTMLInputElement | null
+  const amoledEnd = document.getElementById('settings-amoled-end') as HTMLInputElement | null
 
   if (urlInput) urlInput.value = s.immichUrl
   if (keyInput) keyInput.value = s.immichApiKey
@@ -169,6 +178,9 @@ function populateFields(): void {
   if (karaokeToggle) karaokeToggle.checked = s.karaokeMode
   if (wakelockToggle) wakelockToggle.checked = s.keepScreenOn
   if (photoLyricsToggle) photoLyricsToggle.checked = s.photoModeLyrics
+  if (amoledToggle) amoledToggle.checked = s.amoledMode
+  if (amoledStart) amoledStart.value = s.amoledStartTime
+  if (amoledEnd) amoledEnd.value = s.amoledEndTime
 
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
@@ -186,6 +198,9 @@ function saveAndClose(): void {
   const karaokeToggle = document.getElementById('settings-karaoke') as HTMLInputElement | null
   const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
   const photoLyricsToggle = document.getElementById('settings-photo-lyrics') as HTMLInputElement | null
+  const amoledToggle = document.getElementById('settings-amoled') as HTMLInputElement | null
+  const amoledStart = document.getElementById('settings-amoled-start') as HTMLInputElement | null
+  const amoledEnd = document.getElementById('settings-amoled-end') as HTMLInputElement | null
 
   let finalUrl = urlInput?.value.trim() ?? ''
   if (finalUrl && !finalUrl.startsWith('http')) {
@@ -199,6 +214,9 @@ function saveAndClose(): void {
     karaokeMode:       karaokeToggle?.checked ?? true,
     keepScreenOn:      wakelockToggle?.checked ?? false,
     photoModeLyrics:   photoLyricsToggle?.checked ?? true,
+    amoledMode:        amoledToggle?.checked ?? false,
+    amoledStartTime:   amoledStart?.value || '22:00',
+    amoledEndTime:     amoledEnd?.value || '06:00',
   }
 
   // Salva também os álbuns selecionados (apenas se a lista estiver preenchida no DOM)

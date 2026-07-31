@@ -12,8 +12,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-B7qN73hW.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-PBjq3l0Q.css">
+    <script type="module" crossorigin src="/assets/index-BgBHOtyx.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-Cv5KO9qg.css">
   </head>
   <body>
     <!-- Fundo dinâmico com capa do álbum em blur -->
@@ -246,6 +246,7 @@
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
           </div>
+          
           <div class="settings-row">
             <div class="settings-row-info">
               <span class="settings-row-label">Letra no Modo Foto</span>
@@ -255,6 +256,25 @@
               <input type="checkbox" id="settings-photo-lyrics" checked />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
+          </div>
+
+          <div class="settings-group">
+            <div class="settings-row">
+              <div class="settings-row-info">
+                <span class="settings-row-label">Modo AMOLED Noturno</span>
+                <span class="settings-row-desc">Tela preta com apenas relógio flutuante para evitar desgaste (burn-in). Toque para despertar.</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="settings-amoled" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div style="display: flex; gap: var(--space-sm); align-items: center; margin-top: var(--space-sm);">
+              <label for="settings-amoled-start" style="font-size: 0.9rem; color: var(--clr-text-faint);">Das</label>
+              <input type="time" id="settings-amoled-start" class="settings-field" style="padding: 4px 8px; max-width: 100px;" />
+              <label for="settings-amoled-end" style="font-size: 0.9rem; color: var(--clr-text-faint);">às</label>
+              <input type="time" id="settings-amoled-end" class="settings-field" style="padding: 4px 8px; max-width: 100px;" />
+            </div>
           </div>
         </section>
 

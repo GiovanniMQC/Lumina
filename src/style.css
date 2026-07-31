@@ -1685,3 +1685,48 @@ body.no-karaoke .lyric-line.upcoming {
   animation-duration: 0.8s;
   animation-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1); /* Suave, sem bounce */
 }
+
+/* ── MODO AMOLED (TELA PRETA À NOITE) ────────────────────────── */
+body.amoled-active {
+  background-color: #000 !important;
+}
+
+body.amoled-active #bg-layer,
+body.amoled-active .slideshow-img,
+body.amoled-active .slideshow-vignette,
+body.amoled-active .idle-overlay,
+body.amoled-active #now-playing,
+body.amoled-active #lyrics-container,
+body.amoled-active #photo-mode-lyrics,
+body.amoled-active #bottom-controls,
+body.amoled-active #fullscreen-btn {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.amoled-active #clock-widget {
+  top: 50% !important;
+  right: 50% !important;
+  transform: translate(50%, -50%) !important;
+  text-align: center !important;
+  animation: amoled-float 60s ease-in-out infinite alternate !important;
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+}
+
+body.amoled-active #clock-widget:hover {
+  opacity: 1 !important;
+}
+
+body.amoled-active #mini-weather {
+  justify-content: center !important;
+}
+
+@keyframes amoled-float {
+  0%   { transform: translate(45%, -45%); }
+  25%  { transform: translate(55%, -45%); }
+  50%  { transform: translate(55%, -55%); }
+  75%  { transform: translate(45%, -55%); }
+  100% { transform: translate(50%, -50%); }
+}
