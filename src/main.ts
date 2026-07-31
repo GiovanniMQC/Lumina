@@ -21,7 +21,12 @@ import {
   type CurrentlyPlaying,
 } from './spotify'
 
-import { fetchLyrics, type LyricsResult, type LyricLine } from './lyrics'
+import {
+  fetchLyrics,
+  computeWordTimings,
+  type LyricsResult,
+  type LyricLineWithWords,
+} from './lyrics'
 
 import {
   setPlaybackState,
@@ -31,22 +36,25 @@ import {
 import {
   renderLyrics,
   showScreen,
-  syncLyricsHighlight,
+  syncKaraokeHighlight,
   syncPlainLyrics,
   updateProgress,
   updateTrackInfo,
 } from './ui'
 
-import { initClock } from './clock'
+import { initClock }      from './clock'
+import { initNavigation } from './navigation'
+import { initWeather }    from './weather'
+import { initFullscreen } from './fullscreen'
 
 // ── State ─────────────────────────────────────────────────────
 
-let _tokens: TokenSet | null     = null
-let _lyricsResult: LyricsResult  = { type: 'none' }
-let _syncedLines: LyricLine[]    = []
-let _plainLines: string[]        = []
-let _lastTrackId                 = ''
-let _rafId: number               = 0
+let _tokens: TokenSet | null             = null
+let _lyricsResult: LyricsResult          = { type: 'none' }
+let _syncedLines: LyricLineWithWords[]   = []
+let _plainLines: string[]                = []
+let _lastTrackId                         = ''
+let _rafId: number                       = 0
 
 // ── Token Management ──────────────────────────────────────────
 
@@ -73,17 +81,19 @@ async function loadLyrics(state: CurrentlyPlaying): Promise<void> {
     track.duration_ms
   )
 
-  renderLyrics(_lyricsResult)
-
   if (_lyricsResult.type === 'synced') {
-    _syncedLines = _lyricsResult.lines
+    // Computa timings por palavra para o efeito karaoke
+    _syncedLines = computeWordTimings(_lyricsResult.lines)
     _plainLines  = []
+    renderLyrics(_lyricsResult, _syncedLines)
   } else if (_lyricsResult.type === 'plain') {
     _syncedLines = []
     _plainLines  = _lyricsResult.lines
+    renderLyrics(_lyricsResult)
   } else {
     _syncedLines = []
     _plainLines  = []
+    renderLyrics(_lyricsResult)
   }
 }
 
@@ -102,23 +112,17 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
   if (isNewTrack) {
     _lastTrackId = state.item.id
     stopAnimationLoop()
-
-    // Atualiza UI de track info
     updateTrackInfo(state)
-
-    // Carrega letras
-    await loadLyrics(state)
+    await loadLyrics(state) // Fetch lyrics
   }
 
-  // Atualiza estado de playback para interpolação
   setPlaybackState(state.progress_ms, state.is_playing, state.item.duration_ms)
 
   showScreen('player-screen')
   startAnimationLoop(state)
 }
 
-// ── Animation Loop (rAF) ──────────────────────────────────────
-// Roda a 60fps para scroll suave das letras e barra de progresso
+// ── Animation Loop (rAF 60fps) ────────────────────────────────
 
 let _animTrackDuration = 0
 
@@ -138,12 +142,10 @@ function stopAnimationLoop(): void {
 function animFrame(): void {
   const progressMs = getInterpolatedProgress()
 
-  // Progress bar
   updateProgress(progressMs, _animTrackDuration)
 
-  // Sync letras
   if (_lyricsResult.type === 'synced') {
-    syncLyricsHighlight(_syncedLines, progressMs)
+    syncKaraokeHighlight(_syncedLines, progressMs)
   } else if (_lyricsResult.type === 'plain' && _animTrackDuration > 0) {
     syncPlainLyrics(_plainLines.length, progressMs, _animTrackDuration)
   }
@@ -159,10 +161,9 @@ function isConfigured(): boolean {
 }
 
 async function bootstrap(): Promise<void> {
-  // 1. Inicia relógio
   initClock()
+  initFullscreen()
 
-  // 2. Checa se há callback do Spotify (código na URL)
   const urlParams = new URLSearchParams(window.location.search)
   const code      = urlParams.get('code')
   const error     = urlParams.get('error')
@@ -174,9 +175,7 @@ async function bootstrap(): Promise<void> {
   }
 
   if (code) {
-    // Remove o código da URL (evita reuso)
     window.history.replaceState({}, '', window.location.pathname)
-
     try {
       _tokens = await handleCallback(code)
     } catch (err) {
@@ -185,18 +184,15 @@ async function bootstrap(): Promise<void> {
       return
     }
   } else {
-    // Tenta usar tokens salvos
     _tokens = getStoredTokens()
   }
 
   if (!_tokens) {
-    // Não autenticado → tela de login
     showScreen('login-screen')
     setupLoginButton()
     return
   }
 
-  // 3. Refresh se expirado
   if (isTokenExpired(_tokens)) {
     try {
       _tokens = await refreshAccessToken(_tokens.refreshToken)
@@ -207,10 +203,15 @@ async function bootstrap(): Promise<void> {
     }
   }
 
-  // 4. Inicia polling do Spotify
   initSpotify(_tokens.accessToken, ensureFreshToken)
 
-  showScreen('idle-screen') // estado inicial
+  // Inicia navegação swipe (2 páginas: player + clima)
+  initNavigation('swipe-container', '.nav-dot', 2)
+
+  // Carrega clima em background (não bloqueia)
+  initWeather().catch(err => console.warn('[weather] Init error:', err))
+
+  showScreen('idle-screen')
   startPolling(handlePlayback, 4000)
 }
 

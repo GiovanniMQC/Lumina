@@ -42,13 +42,16 @@ function tick(): void {
 }
 
 export function initClock(): void {
-  const playerTime = document.getElementById('clock-time')
-  const playerDate = document.getElementById('clock-date')
-  const idleTime   = document.getElementById('idle-time')
-  const idleDate   = document.getElementById('idle-date')
+  const playerTime  = document.getElementById('clock-time')
+  const playerDate  = document.getElementById('clock-date')
+  const idleTime    = document.getElementById('idle-time')
+  const idleDate    = document.getElementById('idle-date')
+  const weatherTime = document.getElementById('weather-clock-time')
+  const weatherDate = document.getElementById('weather-clock-date')
 
-  if (playerTime && playerDate) clocks.push({ time: playerTime, date: playerDate })
-  if (idleTime && idleDate)     clocks.push({ time: idleTime,   date: idleDate   })
+  if (playerTime  && playerDate)  clocks.push({ time: playerTime,  date: playerDate  })
+  if (idleTime    && idleDate)    clocks.push({ time: idleTime,    date: idleDate    })
+  if (weatherTime && weatherDate) clocks.push({ time: weatherTime, date: weatherDate })
 
   tick() // imediato
   setInterval(tick, 1000)

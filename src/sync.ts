@@ -2,16 +2,15 @@
 //  sync.ts — Sincronização de letras com progress_ms
 // ================================================================
 
-import type { LyricLine } from './lyrics'
-
 export interface SyncState {
   activeIndex: number
   progressMs:  number
 }
 
 // Retorna o índice da linha ativa dado progress_ms
+// Aceita qualquer array com propriedade timeMs (LyricLine | LyricLineWithWords)
 export function getActiveLineIndex(
-  lines: LyricLine[],
+  lines: ReadonlyArray<{ timeMs: number }>,
   progressMs: number
 ): number {
   if (!lines.length) return -1
@@ -66,6 +65,5 @@ export function getLyricScrollOffset(
   const lineTop         = activeLine.offsetTop
   const lineHeight      = activeLine.offsetHeight
 
-  // Centraliza a linha ativa verticalmente no container
   return lineTop - containerHeight / 2 + lineHeight / 2
 }

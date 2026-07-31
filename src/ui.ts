@@ -5,7 +5,7 @@
 import type { CurrentlyPlaying } from './spotify'
 import type { LyricsResult, LyricLineWithWords } from './lyrics'
 import { formatMs, getBestImage }               from './spotify'
-import { getActiveLineIndex, getLyricScrollOffset } from './sync'
+import { getActiveLineIndex } from './sync'
 
 // ── Screen Management ─────────────────────────────────────────
 
@@ -327,6 +327,13 @@ function scrollToActiveLine(activeIdx: number): void {
 
   if (!inner || !container || !activeLine) return
 
-  const offset = getLyricScrollOffset(container, activeLine)
+  // Utiliza offsetTop estático do layout, que é imune ao estado visual (GPU) do translateY
+  const lineTop         = activeLine.offsetTop
+  const lineHeight      = activeLine.offsetHeight
+  const containerHeight = container.clientHeight
+
+  // O offset original do Claude permitia valores negativos para centralizar as primeiras linhas
+  const offset = lineTop - containerHeight / 2 + lineHeight / 2
+  
   inner.style.transform = `translateY(-${offset}px)`
 }
