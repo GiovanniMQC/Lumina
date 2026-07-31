@@ -122,7 +122,10 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
     _lastTrackId = state.item.id
     stopAnimationLoop()
     updateTrackInfo(state)
-    await loadLyrics(state) // Fetch lyrics
+    // Limpa letras antigas e mostra carregando imediatamente
+    renderLyrics({ type: 'none' })
+    // Carrega letras em background — sem bloquear a UI
+    loadLyrics(state).catch(err => console.warn('[lyrics] Erro async:', err))
   }
 
   setPlaybackState(state.progress_ms, state.is_playing, state.item.duration_ms)
@@ -188,17 +191,22 @@ async function bootstrap(): Promise<void> {
   // Pré-carrega metadados do Immich
   loadImmichAssets()
 
-  // Botão Photo Mode
-  const photoModeBtn = document.getElementById('photo-mode-btn')
-  photoModeBtn?.addEventListener('click', () => {
+  // Clicar na capa do álbum entra no Modo Foto
+  const albumArt = document.getElementById('album-art')
+  albumArt?.addEventListener('click', () => {
     _photoMode = !_photoMode
     document.body.classList.toggle('photo-mode', _photoMode)
-    
-    // Se não estivermos em idle, o Photo Mode determina se o slideshow deve rodar
+
     if (!_isIdle) {
       if (_photoMode) startSlideshow()
       else stopSlideshow()
     }
+  })
+
+  // Clicar no relógio dá zoom nele
+  const clockWidget = document.getElementById('clock-widget')
+  clockWidget?.addEventListener('click', () => {
+    clockWidget.classList.toggle('clock-zoomed')
   })
 
   const urlParams = new URLSearchParams(window.location.search)

@@ -174,6 +174,10 @@ function renderWeather(d: WeatherData): void {
   setText('weather-maxmin',        `${d.tempMax}° / ${d.tempMin}°`)
   setText('weather-updated',       `Atualizado às ${new Date().getHours().toString().padStart(2,'0')}:${new Date().getMinutes().toString().padStart(2,'0')}`)
 
+  // Mini-clima no player (abaixo do relógio)
+  setText('mini-weather-emoji', wmo.emoji)
+  setText('mini-weather-temp',  `${d.temp}° ${wmo.desc}`)
+
   // Hourly forecast
   const hourlyEl = document.getElementById('weather-hourly')
   if (hourlyEl) {

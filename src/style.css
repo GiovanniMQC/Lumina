@@ -272,6 +272,18 @@ html, body {
   right: var(--space-xl);
   text-align: right;
   z-index: 20;
+  cursor: pointer;
+  transition: transform var(--transition-spring);
+}
+
+#clock-widget:hover {
+  opacity: 0.85;
+}
+
+#clock-widget.clock-zoomed {
+  transform: scale(1.6) translate(-25%, 18%);
+  transform-origin: top right;
+  z-index: 200;
 }
 
 #clock-time {
@@ -292,6 +304,24 @@ html, body {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-top: var(--space-xs);
+}
+
+#mini-weather {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: var(--space-sm);
+  font-family: var(--font-body);
+  font-size: clamp(0.8rem, 1.6vw, 1.05rem);
+  color: var(--clr-text-muted);
+  white-space: nowrap;
+  animation: fadeIn 0.6s ease both;
+}
+
+#mini-weather-emoji {
+  font-size: 1.1em;
+  line-height: 1;
 }
 
 /* ── Now Playing Area ─────────────────────────────────────── */
@@ -332,6 +362,14 @@ html, body {
   transition:
     opacity var(--transition-med),
     transform var(--transition-spring);
+  cursor: pointer;
+}
+
+#album-art:hover {
+  transform: scale(1.04);
+  box-shadow:
+    0 24px 70px rgba(0 0 0 / 0.7),
+    0 0 0 2px rgba(255 255 255 / 0.15);
 }
 
 #album-art.changing {
@@ -350,14 +388,16 @@ html, body {
 
 #track-title {
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 3.5vw, 3rem);
+  font-size: clamp(1.4rem, 3vw, 2.8rem);
   font-weight: 800;
   letter-spacing: -0.02em;
-  line-height: 1.1;
+  line-height: 1.15;
   color: var(--clr-text);
-  white-space: nowrap;
+  /* Permite quebrar em até 2 linhas antes de truncar */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
   transition: opacity var(--transition-med);
 }
 
@@ -850,6 +890,12 @@ body.photo-mode #now-playing {
 body.photo-mode #album-art {
   width: 90px;
   height: 90px;
+  cursor: pointer;
+}
+
+body.photo-mode #album-art:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 8px 20px rgba(0,0,0,0.5);
 }
 
 body.photo-mode #album-art-glow {
@@ -1348,23 +1394,57 @@ body.no-karaoke .lyric-line.upcoming {
   color: var(--clr-text);
 }
 
-/* ── Responsive (portrait tablet) ────────────────────────── */
+/* ===================================================================
+   RESPONSIVE — Adaptação para celulares, tablets portrait / landscape
+   =================================================================== */
+
+/* --- Tablet / Phone em portrait (vertical) --- */
 @media (orientation: portrait) {
+  :root {
+    --space-xl: 24px;
+    --space-2xl: 40px;
+  }
+
   #player-page {
     flex-direction: column;
-    padding: var(--space-lg);
+    padding: var(--space-lg) var(--space-md);
+    gap: var(--space-md);
   }
 
   #now-playing {
     flex-direction: row;
     align-items: center;
-    gap: var(--space-lg);
+    gap: var(--space-md);
     padding-top: 0;
+    flex-shrink: 0;
   }
 
-  #album-art {
-    width: clamp(100px, 22vw, 170px);
-    height: clamp(100px, 22vw, 170px);
+  /* Tablet grande portrait: album art maior */
+  @media (min-width: 600px) {
+    #album-art {
+      width: clamp(130px, 26vw, 220px);
+      height: clamp(130px, 26vw, 220px);
+    }
+  }
+
+  /* Phone portrait: album art compacto */
+  @media (max-width: 599px) {
+    #album-art {
+      width: clamp(80px, 20vw, 130px);
+      height: clamp(80px, 20vw, 130px);
+    }
+
+    #track-title {
+      font-size: clamp(1.1rem, 5vw, 1.6rem);
+    }
+
+    #track-artist {
+      font-size: clamp(0.85rem, 3.5vw, 1.1rem);
+    }
+
+    #clock-time {
+      font-size: clamp(1.8rem, 6vw, 2.8rem);
+    }
   }
 
   #clock-time {
@@ -1372,20 +1452,25 @@ body.no-karaoke .lyric-line.upcoming {
   }
 
   .lyric-line {
-    font-size: clamp(1.2rem, 4vw, 2.2rem);
+    font-size: clamp(1.1rem, 3.8vw, 2rem);
   }
 
-  /* usa font-size em vez de scale para evitar overflow */
   .lyric-line.active {
     transform: scale(1);
-    font-size: clamp(1.4rem, 4.5vw, 2.6rem);
+    font-size: clamp(1.25rem, 4.5vw, 2.4rem);
   }
 
   #weather-stats {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  /* Zoom do relógio centralizado em portrait */
+  #clock-widget.clock-zoomed {
+    transform: scale(1.5) translate(-28%, 18%);
+  }
 }
 
+/* --- Landscape (telas horizontais: tablets e phones deitados) --- */
 @media (orientation: landscape) {
   #player-page {
     display: grid;
@@ -1407,6 +1492,31 @@ body.no-karaoke .lyric-line.upcoming {
     justify-content: flex-end;
     padding-bottom: var(--space-xl);
     align-items: flex-start;
+  }
+
+  /* Tablet landscape: album art maior */
+  @media (min-height: 600px) {
+    #album-art {
+      width: clamp(160px, 30vh, 320px);
+      height: clamp(160px, 30vh, 320px);
+    }
+  }
+
+  /* Phone landscape: album art menor para sobrar espaço vertical */
+  @media (max-height: 599px) {
+    #album-art {
+      width: clamp(80px, 18vh, 140px);
+      height: clamp(80px, 18vh, 140px);
+    }
+
+    #player-page {
+      padding: var(--space-md);
+      gap: var(--space-md);
+    }
+
+    #clock-time {
+      font-size: clamp(1.8rem, 5vh, 3rem);
+    }
   }
 
   #lyrics-container {
