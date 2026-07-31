@@ -36,6 +36,7 @@ import {
 import {
   renderLyrics,
   showScreen,
+  setPlayerIdle,
   syncKaraokeHighlight,
   syncPlainLyrics,
   updateProgress,
@@ -100,10 +101,11 @@ async function loadLyrics(state: CurrentlyPlaying): Promise<void> {
 // ── Playback Handler ──────────────────────────────────────────
 
 async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
-  // Nada tocando → idle
+  // Nada tocando → idle overlay
   if (!state || !state.item || !state.is_playing) {
     stopAnimationLoop()
-    showScreen('idle-screen')
+    showScreen('player-screen')
+    setPlayerIdle(true)
     return
   }
 
@@ -119,6 +121,7 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
   setPlaybackState(state.progress_ms, state.is_playing, state.item.duration_ms)
 
   showScreen('player-screen')
+  setPlayerIdle(false)
   startAnimationLoop(state)
 }
 
@@ -211,7 +214,8 @@ async function bootstrap(): Promise<void> {
   // Carrega clima em background (não bloqueia)
   initWeather().catch(err => console.warn('[weather] Init error:', err))
 
-  showScreen('idle-screen')
+  showScreen('player-screen')
+  setPlayerIdle(true)
   startPolling(handlePlayback, 4000)
 }
 

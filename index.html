@@ -51,6 +51,18 @@
         <!-- ── Página 0: Player Spotify ──────────────────────── -->
         <div class="swipe-page" id="player-page">
 
+          <!-- Tela idle interna (nada tocando) -->
+          <div id="idle-overlay" class="idle-overlay">
+            <div id="idle-clock">
+              <div id="idle-time">--:--</div>
+              <div id="idle-date">--- --, ----</div>
+            </div>
+            <div id="idle-message">
+              <span class="idle-dot"></span>
+              <span>Nenhuma música tocando</span>
+            </div>
+          </div>
+
           <!-- Relógio — canto superior direito -->
           <div id="clock-widget">
             <div id="clock-time">--:--</div>
@@ -155,18 +167,6 @@
       </div>
 
     </div><!-- /player-screen -->
-
-    <!-- Tela idle (nada tocando) -->
-    <div id="idle-screen" class="screen">
-      <div id="idle-clock">
-        <div id="idle-time">--:--</div>
-        <div id="idle-date">--- --, ----</div>
-      </div>
-      <div id="idle-message">
-        <span class="idle-dot"></span>
-        <span>Nenhuma música tocando</span>
-      </div>
-    </div>
 
     <!-- Botão de tela cheia (global, aparece em todas as telas) -->
     <button id="fullscreen-btn" title="Tela cheia" aria-label="Alternar tela cheia">

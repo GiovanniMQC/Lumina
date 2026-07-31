@@ -11,18 +11,30 @@ import { getActiveLineIndex } from './sync'
 
 type ScreenId = 'login-screen' | 'player-screen' | 'idle-screen'
 
-let _currentScreen: ScreenId | null = null
-
 export function showScreen(id: ScreenId): void {
-  if (_currentScreen === id) return
-  _currentScreen = id
+  const isLogin = id === 'login-screen'
+  if (isLogin) {
+    document.getElementById('bg-image')!.style.backgroundImage = 'none'
+  }
 
   document.querySelectorAll<HTMLElement>('.screen').forEach(el => {
     el.classList.remove('active')
   })
 
-  const target = document.getElementById(id)
-  target?.classList.add('active')
+  document.getElementById(id)?.classList.add('active')
+}
+
+export function setPlayerIdle(isIdle: boolean): void {
+  const playerPage = document.getElementById('player-page')
+  const idleOverlay = document.getElementById('idle-overlay')
+  
+  if (isIdle) {
+    playerPage?.classList.add('is-idle')
+    idleOverlay?.classList.add('active')
+  } else {
+    playerPage?.classList.remove('is-idle')
+    idleOverlay?.classList.remove('active')
+  }
 }
 
 // ── Background ────────────────────────────────────────────────
@@ -327,13 +339,14 @@ function scrollToActiveLine(activeIdx: number): void {
 
   if (!inner || !container || !activeLine) return
 
-  // Utiliza offsetTop estático do layout, que é imune ao estado visual (GPU) do translateY
   const lineTop         = activeLine.offsetTop
   const lineHeight      = activeLine.offsetHeight
   const containerHeight = container.clientHeight
+  const innerHeight     = inner.scrollHeight
 
-  // O offset original do Claude permitia valores negativos para centralizar as primeiras linhas
   const offset = lineTop - containerHeight / 2 + lineHeight / 2
-  
+
+  console.log(`[scroll] idx=${activeIdx} lineTop=${lineTop} lineH=${lineHeight} containerH=${containerHeight} innerH=${innerHeight} offset=${offset} transform=translateY(-${offset}px)`)
+
   inner.style.transform = `translateY(-${offset}px)`
 }

@@ -201,6 +201,7 @@ html, body {
 #player-screen {
   overflow: hidden;
   position: relative;
+  height: 100%;
 }
 
 /* ── Swipe System ─────────────────────────────────────────── */
@@ -225,6 +226,7 @@ html, body {
   flex-direction: column;
   padding: var(--space-xl);
   gap: var(--space-xl);
+  height: 100%;
 }
 
 /* ── Nav Dots ─────────────────────────────────────────────── */
@@ -442,8 +444,7 @@ html, body {
   transition:
     opacity var(--transition-med),
     transform var(--transition-med),
-    filter var(--transition-med),
-    font-size var(--transition-med);
+    filter var(--transition-med);
   transform-origin: left center;
 }
 
@@ -463,7 +464,8 @@ html, body {
 
 .lyric-line.active {
   opacity: 1;
-  transform: scale(1.15); /* Aumentado para compensar a remoção do font-size */
+  transform: scale(1);
+  font-size: clamp(1.65rem, 3.5vw, 3rem);
 }
 
 /* ── Karaoke Word Styles ──────────────────────────────────── */
@@ -531,15 +533,34 @@ html, body {
   font-family: var(--font-body);
 }
 
-/* ── Idle Screen ──────────────────────────────────────────── */
-#idle-screen {
+/* ── Idle Overlay ──────────────────────────────────────────── */
+.idle-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: var(--space-xl);
   background:
     radial-gradient(ellipse 100% 70% at 50% 40%, rgba(29 185 84 / 0.04) 0%, transparent 70%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-slow);
 }
+
+.idle-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Oculta os itens do player quando em idle, exceto o idle-overlay */
+#player-page.is-idle > :not(.idle-overlay) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
 
 #idle-clock {
   text-align: center;
@@ -916,9 +937,10 @@ html, body {
     font-size: clamp(1.2rem, 4vw, 2.2rem);
   }
 
-  /* removido font-size para evitar reflow no scroll */
+  /* usa font-size em vez de scale para evitar overflow */
   .lyric-line.active {
-    transform: scale(1.15);
+    transform: scale(1);
+    font-size: clamp(1.4rem, 4.5vw, 2.6rem);
   }
 
   #weather-stats {
@@ -934,6 +956,7 @@ html, body {
     padding: var(--space-xl);
     gap: var(--space-xl);
     align-items: stretch;
+    height: 100%;
   }
 
   #clock-widget {
