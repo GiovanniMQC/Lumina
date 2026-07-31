@@ -336,8 +336,6 @@ html, body {
   padding-top: var(--space-md);
   flex-shrink: 0;
   view-transition-name: now-playing;
-  /* Em telas pequenas verticais (celular), vai quebrar para coluna */
-  flex-wrap: wrap;
 }
 
 /* Album Art */
@@ -387,7 +385,7 @@ html, body {
 /* Track Info */
 #track-info {
   flex: 1;
-  min-width: 200px; /* Ajuda a forçar a quebra no wrap */
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -908,10 +906,15 @@ body.photo-mode #mini-weather {
 }
 
 
-/* Oculta apenas o relógio do idle (idle-clock) quando tocando música */
-body.photo-mode:not(.is-idle) .idle-content {
-  opacity: 0 !important;
+/* Oculta a tela idle padrão no modo foto */
+body.photo-mode .idle-content {
   display: none !important;
+}
+
+/* Garante que o relógio principal (que possui clima e zoom) nunca suma no modo foto */
+body.photo-mode #player-page.is-idle > #clock-widget {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 /* Transforma o player em um widget menor no canto inferior esquerdo */
@@ -1562,11 +1565,11 @@ body.no-karaoke .lyric-line.upcoming {
     }
   }
 
-  /* Phone portrait: album art compacto */
+  /* Phone portrait: album art em tamanho decente */
   @media (max-width: 599px) {
     #album-art {
-      width: clamp(80px, 20vw, 130px);
-      height: clamp(80px, 20vw, 130px);
+      width: clamp(100px, 28vw, 160px);
+      height: clamp(100px, 28vw, 160px);
     }
 
     #track-title {
@@ -1630,10 +1633,16 @@ body.no-karaoke .lyric-line.upcoming {
     padding-bottom: 0;
   }
 
+  #track-info {
+    flex: none; /* Impede que estique verticalmente, permitindo a centralização do bloco todo */
+    width: 100%;
+    margin-top: var(--space-md);
+  }
+
   /* Tablet landscape: album art e textos muito maiores para ocupar a metade da tela */
   @media (min-height: 600px) {
     #album-art {
-      width: min(100%, 55vh);
+      width: min(100%, 70vh);
       height: auto;
       aspect-ratio: 1 / 1;
       max-width: none;
@@ -1699,13 +1708,4 @@ body.no-karaoke .lyric-line.upcoming {
 ::view-transition-new(album-art) {
   animation-duration: 0.8s;
   animation-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1); /* Suave, sem bounce */
-}
-
-/* --- Phones (Portrait mode) --- */
-@media (max-width: 600px) and (orientation: portrait) {
-  #now-playing {
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-  }
 }
