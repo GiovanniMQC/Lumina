@@ -195,11 +195,19 @@ async function bootstrap(): Promise<void> {
   const albumArt = document.getElementById('album-art')
   albumArt?.addEventListener('click', () => {
     _photoMode = !_photoMode
-    document.body.classList.toggle('photo-mode', _photoMode)
 
-    if (!_isIdle) {
-      if (_photoMode) startSlideshow()
-      else stopSlideshow()
+    const updateDOM = () => {
+      document.body.classList.toggle('photo-mode', _photoMode)
+      if (!_isIdle) {
+        if (_photoMode) startSlideshow()
+        else stopSlideshow()
+      }
+    }
+
+    if (document.startViewTransition) {
+      document.startViewTransition(updateDOM)
+    } else {
+      updateDOM()
     }
   })
 

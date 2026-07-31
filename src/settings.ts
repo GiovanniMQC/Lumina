@@ -15,6 +15,7 @@ export interface AppSettings {
   // Player
   karaokeMode: boolean // true = destaque por palavra, false = apenas linha
   keepScreenOn: boolean // true = impede a tela de desligar
+  photoModeLyrics: boolean // true = mostra a linha atual da letra no canto inferior no modo foto
 }
 
 const STORAGE_KEY = 'tabhub_settings'
@@ -26,6 +27,7 @@ const DEFAULTS: AppSettings = {
   slideshowInterval: 20,
   karaokeMode:       true,
   keepScreenOn:      false,
+  photoModeLyrics:   true,
 }
 
 // ── Leitura / Escrita ─────────────────────────────────────────
@@ -90,6 +92,12 @@ export function initSettings(): void {
   karaokeToggle?.addEventListener('change', () => {
     document.body.classList.toggle('no-karaoke', !karaokeToggle.checked)
   })
+
+  // Toggle letras no modo foto
+  const photoLyricsToggle = document.getElementById('settings-photo-lyrics') as HTMLInputElement | null
+  photoLyricsToggle?.addEventListener('change', () => {
+    document.body.classList.toggle('no-photo-lyrics', !photoLyricsToggle.checked)
+  })
 }
 
 function openSettings(): void {
@@ -111,15 +119,18 @@ function populateFields(): void {
   const intInput = document.getElementById('settings-slideshow-interval') as HTMLInputElement | null
   const karaokeToggle = document.getElementById('settings-karaoke') as HTMLInputElement | null
   const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
+  const photoLyricsToggle = document.getElementById('settings-photo-lyrics') as HTMLInputElement | null
 
   if (urlInput) urlInput.value = s.immichUrl
   if (keyInput) keyInput.value = s.immichApiKey
   if (intInput) intInput.value = String(s.slideshowInterval)
   if (karaokeToggle) karaokeToggle.checked = s.karaokeMode
   if (wakelockToggle) wakelockToggle.checked = s.keepScreenOn
+  if (photoLyricsToggle) photoLyricsToggle.checked = s.photoModeLyrics
 
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
+  document.body.classList.toggle('no-photo-lyrics', !s.photoModeLyrics)
 
   // Oculta a lista de álbuns até clicar em buscar (ou podemos mantê-la vazia)
   const listEl = document.getElementById('settings-albums-list')
@@ -132,6 +143,7 @@ function saveAndClose(): void {
   const intInput = document.getElementById('settings-slideshow-interval') as HTMLInputElement | null
   const karaokeToggle = document.getElementById('settings-karaoke') as HTMLInputElement | null
   const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
+  const photoLyricsToggle = document.getElementById('settings-photo-lyrics') as HTMLInputElement | null
 
   const newSettings: Partial<AppSettings> = {
     immichUrl:         urlInput?.value.trim() ?? '',
@@ -139,6 +151,7 @@ function saveAndClose(): void {
     slideshowInterval: parseInt(intInput?.value ?? '20', 10) || 20,
     karaokeMode:       karaokeToggle?.checked ?? true,
     keepScreenOn:      wakelockToggle?.checked ?? false,
+    photoModeLyrics:   photoLyricsToggle?.checked ?? true,
   }
 
   // Salva também os álbuns selecionados (apenas se a lista estiver preenchida no DOM)
@@ -153,6 +166,7 @@ function saveAndClose(): void {
 
   saveSettings(newSettings)
   document.body.classList.toggle('no-karaoke', !newSettings.karaokeMode)
+  document.body.classList.toggle('no-photo-lyrics', !newSettings.photoModeLyrics)
   _onSettingsSaved?.()
   closeSettings()
 }

@@ -55,6 +55,7 @@ export function extractAccentColor(imageUrl: string): void {
 
   const img = new Image()
   img.crossOrigin = 'anonymous'
+  img.decoding = 'async' // Evita travar a UI ao decodificar a imagem
   img.src = imageUrl
 
   img.onload = () => {
@@ -173,6 +174,7 @@ export function renderLyrics(result: LyricsResult, linesWithWords?: LyricLineWit
     msg.className   = 'lyrics-unavailable'
     msg.textContent = '♪ Letra não disponível ♪'
     inner.appendChild(msg)
+    updatePhotoLyrics('')
     return
   }
 
@@ -186,11 +188,13 @@ export function renderLyrics(result: LyricsResult, linesWithWords?: LyricLineWit
       _lyricLineEls.push(el)
       _wordEls.push([])
     }
+    updatePhotoLyrics('♪ Letra não sincronizada ♪')
     return
   }
 
   // ── Synced lyrics com palavras ─────────────────────────────
   const src = linesWithWords ?? []
+  const fragment = document.createDocumentFragment()
 
   for (let li = 0; li < src.length; li++) {
     const lineData = src[li]
@@ -220,10 +224,12 @@ export function renderLyrics(result: LyricsResult, linesWithWords?: LyricLineWit
       }
     }
 
-    inner.appendChild(lineEl)
+    fragment.appendChild(lineEl)
     _lyricLineEls.push(lineEl)
     _wordEls.push(lineWordEls)
   }
+  
+  inner.appendChild(fragment)
 }
 
 // ── Karaoke Sync (synced lyrics) ──────────────────────────────
@@ -278,6 +284,20 @@ export function syncKaraokeHighlight(
     }
 
     scrollToActiveLine(activeLineIdx)
+
+    // Atualiza a letra em destaque do Modo Foto
+    const photoLyricsEl = document.getElementById('photo-mode-lyrics')
+    if (photoLyricsEl) {
+      if (activeLineIdx >= 0 && lines[activeLineIdx]) {
+        photoLyricsEl.textContent = lines[activeLineIdx].text || '♪'
+        // Força um reflow para reiniciar animação (fade-in sutil)
+        photoLyricsEl.style.animation = 'none'
+        void photoLyricsEl.offsetWidth
+        photoLyricsEl.style.animation = ''
+      } else {
+        photoLyricsEl.textContent = ''
+      }
+    }
   }
 
   // ── Atualiza palavra ativa dentro da linha ────────────────
@@ -327,6 +347,14 @@ export function syncPlainLyrics(
     else                 el.classList.add('upcoming')
   })
 
+  // Atualiza a letra no Modo Foto (Plain mode)
+  const activeLineEl = _lyricLineEls[activeIdx]
+  if (activeLineEl) {
+    updatePhotoLyrics(activeLineEl.textContent || '♪')
+  } else {
+    updatePhotoLyrics('♪')
+  }
+
   scrollToActiveLine(activeIdx)
 }
 
@@ -346,7 +374,14 @@ function scrollToActiveLine(activeIdx: number): void {
 
   const offset = lineTop - containerHeight / 2 + lineHeight / 2
 
-  console.log(`[scroll] idx=${activeIdx} lineTop=${lineTop} lineH=${lineHeight} containerH=${containerHeight} innerH=${innerHeight} offset=${offset} transform=translateY(-${offset}px)`)
+  // Limita o scroll para não passar dos limites do container
+  const maxOffset = Math.max(0, innerHeight - containerHeight)
+  const clampedOffset = Math.max(0, Math.min(offset, maxOffset))
 
-  inner.style.transform = `translateY(-${offset}px)`
+  inner.style.transform = `translateY(-${clampedOffset}px)`
+}
+
+export function updatePhotoLyrics(text: string): void {
+  const el = document.getElementById('photo-mode-lyrics')
+  if (el) el.textContent = text
 }

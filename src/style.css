@@ -331,10 +331,13 @@ html, body {
 /* ── Now Playing Area ─────────────────────────────────────── */
 #now-playing {
   display: flex;
-  align-items: flex-end;
-  gap: var(--space-xl);
+  align-items: center;
+  gap: var(--space-md);
   padding-top: var(--space-md);
   flex-shrink: 0;
+  view-transition-name: now-playing;
+  /* Em telas pequenas verticais (celular), vai quebrar para coluna */
+  flex-wrap: wrap;
 }
 
 /* Album Art */
@@ -350,7 +353,8 @@ html, body {
   border-radius: 50%;
   filter: blur(40px);
   opacity: 0.35;
-  transition: background var(--transition-slow), opacity var(--transition-med);
+  /* Apenas transição de opacidade, transição de 'background-image' com blur é muito pesada */
+  transition: opacity var(--transition-med);
   z-index: -1;
 }
 
@@ -363,10 +367,9 @@ html, body {
   box-shadow:
     0 20px 60px rgba(0 0 0 / 0.6),
     0 0 0 1px rgba(255 255 255 / 0.05);
-  transition:
-    opacity var(--transition-med),
-    transform var(--transition-spring);
+  transition: opacity var(--transition-med);
   cursor: pointer;
+  view-transition-name: album-art;
 }
 
 #album-art:hover {
@@ -384,7 +387,7 @@ html, body {
 /* Track Info */
 #track-info {
   flex: 1;
-  min-width: 0;
+  min-width: 200px; /* Ajuda a forçar a quebra no wrap */
   display: flex;
   flex-direction: column;
   gap: var(--space-sm);
@@ -898,6 +901,12 @@ body.photo-mode #clock-time {
 body.photo-mode #clock-date {
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
+body.photo-mode #mini-weather {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+}
+
 
 /* Oculta apenas o relógio do idle (idle-clock) quando tocando música */
 body.photo-mode:not(.is-idle) .idle-content {
@@ -911,16 +920,14 @@ body.photo-mode #now-playing {
   bottom: 80px; /* Acima dos botões inferiores */
   left: var(--space-xl);
   z-index: 100;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  /* Fundo escurecido sem blur (melhor para performance e evita travamentos na transição) */
+  background: rgba(0, 0, 0, 0.75);
   padding: var(--space-md);
   border-radius: var(--radius-lg);
   max-width: 400px;
   align-items: center;
   gap: var(--space-md);
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  transition: all var(--transition-med);
 }
 
 body.photo-mode #album-art {
@@ -948,6 +955,30 @@ body.photo-mode #track-artist {
 
 body.photo-mode .slideshow-img.visible {
   opacity: 1.0; /* Fotos 100% visíveis, já que a hora e o player estão por cima com sombras/fundos */
+}
+
+/* ── Letra em destaque no Modo Foto (Canto Inferior Direito) ── */
+#photo-mode-lyrics {
+  display: none; /* Só aparece no modo foto */
+}
+
+body.photo-mode:not(.no-photo-lyrics) #photo-mode-lyrics {
+  display: block;
+  position: absolute;
+  bottom: var(--space-xl);
+  right: var(--space-xl);
+  max-width: 50%;
+  text-align: right;
+  z-index: 100;
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3vw, 2.5rem);
+  font-weight: 700;
+  color: var(--clr-text);
+  line-height: 1.2;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9), 0 0 4px rgba(0, 0, 0, 0.8);
+  /* Truncate longo (mas pode quebrar linha, vamos deixar flexível) */
+  word-wrap: break-word;
+  animation: fadeIn 0.4s ease-out;
 }
 
 #settings-overlay {
@@ -1593,16 +1624,28 @@ body.no-karaoke .lyric-line.upcoming {
 
   #now-playing {
     flex-direction: column;
-    justify-content: flex-end;
-    padding-bottom: var(--space-xl);
-    align-items: flex-start;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 0;
   }
 
-  /* Tablet landscape: album art maior */
+  /* Tablet landscape: album art e textos muito maiores para ocupar a metade da tela */
   @media (min-height: 600px) {
     #album-art {
-      width: clamp(160px, 30vh, 320px);
-      height: clamp(160px, 30vh, 320px);
+      width: min(100%, 55vh);
+      height: auto;
+      aspect-ratio: 1 / 1;
+      max-width: none;
+    }
+
+    #track-title {
+      font-size: clamp(2rem, 4.5vw, 3.5rem);
+      line-height: 1.1;
+    }
+
+    #track-artist {
+      font-size: clamp(1.2rem, 2.5vw, 2rem);
     }
   }
 
@@ -1644,5 +1687,25 @@ body.no-karaoke .lyric-line.upcoming {
 
   #weather-stats {
     grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Customização do View Transitions API (Modo Foto) ── */
+::view-transition-old(root),
+::view-transition-new(root),
+::view-transition-old(now-playing),
+::view-transition-new(now-playing),
+::view-transition-old(album-art),
+::view-transition-new(album-art) {
+  animation-duration: 0.8s;
+  animation-timing-function: cubic-bezier(0.4, 0.0, 0.2, 1); /* Suave, sem bounce */
+}
+
+/* --- Phones (Portrait mode) --- */
+@media (max-width: 600px) and (orientation: portrait) {
+  #now-playing {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
   }
 }
