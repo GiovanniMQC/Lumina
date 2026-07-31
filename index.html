@@ -53,13 +53,21 @@
 
           <!-- Tela idle interna (nada tocando) -->
           <div id="idle-overlay" class="idle-overlay">
-            <div id="idle-clock">
-              <div id="idle-time">--:--</div>
-              <div id="idle-date">--- --, ----</div>
-            </div>
-            <div id="idle-message">
-              <span class="idle-dot"></span>
-              <span>Nenhuma música tocando</span>
+            <!-- Slideshow de fotos do Immich (crossfade A/B) -->
+            <img id="slideshow-img-a" class="slideshow-img" src="" alt="" aria-hidden="true" />
+            <img id="slideshow-img-b" class="slideshow-img" src="" alt="" aria-hidden="true" />
+            <div class="slideshow-vignette"></div>
+
+            <!-- Info de descanso sobre as fotos -->
+            <div class="idle-content">
+              <div id="idle-clock">
+                <div id="idle-time">--:--</div>
+                <div id="idle-date">--- --, ----</div>
+              </div>
+              <div id="idle-message">
+                <span class="idle-dot"></span>
+                <span>Nenhuma música tocando</span>
+              </div>
             </div>
           </div>
 
@@ -160,13 +168,103 @@
 
       </div><!-- /swipe-container -->
 
-      <!-- Indicadores de página -->
+      <!-- Indicadores de página + botão de configurações -->
       <div id="nav-dots">
         <button class="nav-dot active" data-page="0" aria-label="Player" title="Música"></button>
         <button class="nav-dot"        data-page="1" aria-label="Clima"  title="Clima"></button>
       </div>
 
+      <div id="bottom-controls">
+        <button id="photo-mode-btn" title="Modo Foto" aria-label="Alternar Modo Foto">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+        </button>
+        <button id="settings-btn" title="Configurações" aria-label="Abrir configurações">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </button>
+      </div>
+
     </div><!-- /player-screen -->
+
+    <!-- Overlay escuro por baixo do modal -->
+    <div id="settings-overlay"></div>
+
+    <!-- Modal de Configurações -->
+    <div id="settings-modal" role="dialog" aria-modal="true" aria-label="Configurações">
+      <div class="settings-header">
+        <h2>Configurações</h2>
+        <button id="settings-close" aria-label="Fechar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" width="20" height="20">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="settings-body">
+
+        <!-- Seção: Geral -->
+        <section class="settings-section">
+          <h3 class="settings-section-title">Geral</h3>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <span class="settings-row-label">Manter tela ligada</span>
+              <span class="settings-row-desc">Impede que a tela do tablet desligue automaticamente.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-wakelock" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Seção: Reprodução -->
+        <section class="settings-section">
+          <h3 class="settings-section-title">Reprodução</h3>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <span class="settings-row-label">Destaque por palavra (Karaokê)</span>
+              <span class="settings-row-desc">Ilumina palavra por palavra. Desativado = linha inteira brilha.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-karaoke" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+        </section>
+
+        <!-- Seção: Slideshow (Immich) -->
+        <section class="settings-section">
+          <h3 class="settings-section-title">Slideshow (Immich)</h3>
+          <div class="settings-field">
+            <label for="settings-immich-url">URL do servidor</label>
+            <input type="url" id="settings-immich-url" placeholder="http://192.168.1.100:2283" autocomplete="off" />
+          </div>
+          <div class="settings-field">
+            <label for="settings-immich-key">API Key</label>
+            <input type="password" id="settings-immich-key" placeholder="Cole sua API Key aqui" autocomplete="off" />
+          </div>
+          <div class="settings-field">
+            <label for="settings-slideshow-interval">Intervalo entre fotos (segundos)</label>
+            <input type="number" id="settings-slideshow-interval" value="20" min="5" max="120" />
+          </div>
+          <button id="settings-fetch-albums" class="btn-secondary">Buscar álbuns</button>
+          <div id="settings-albums-status" class="settings-status"></div>
+          <div id="settings-albums-list" class="settings-albums-list"></div>
+        </section>
+
+      </div>
+
+      <div class="settings-footer">
+        <button id="settings-save" class="btn-primary">Salvar configurações</button>
+      </div>
+    </div>
 
     <!-- Botão de tela cheia (global, aparece em todas as telas) -->
     <button id="fullscreen-btn" title="Tela cheia" aria-label="Alternar tela cheia">

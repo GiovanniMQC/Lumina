@@ -47,6 +47,9 @@ import { initClock }      from './clock'
 import { initNavigation } from './navigation'
 import { initWeather }    from './weather'
 import { initFullscreen } from './fullscreen'
+import { initSettings, setOnSettingsSaved } from './settings'
+import { loadImmichAssets, startSlideshow, stopSlideshow } from './immich'
+import { initWakeLock, updateWakeLock } from './wakelock'
 
 // ── State ─────────────────────────────────────────────────────
 
@@ -56,6 +59,8 @@ let _syncedLines: LyricLineWithWords[]   = []
 let _plainLines: string[]                = []
 let _lastTrackId                         = ''
 let _rafId: number                       = 0
+let _isIdle                              = false
+let _photoMode                           = false
 
 // ── Token Management ──────────────────────────────────────────
 
@@ -106,6 +111,8 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
     stopAnimationLoop()
     showScreen('player-screen')
     setPlayerIdle(true)
+    _isIdle = true
+    startSlideshow()
     return
   }
 
@@ -120,6 +127,10 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
 
   setPlaybackState(state.progress_ms, state.is_playing, state.item.duration_ms)
 
+  _isIdle = false
+  if (!_photoMode) {
+    stopSlideshow()
+  }
   showScreen('player-screen')
   setPlayerIdle(false)
   startAnimationLoop(state)
@@ -166,6 +177,29 @@ function isConfigured(): boolean {
 async function bootstrap(): Promise<void> {
   initClock()
   initFullscreen()
+  initSettings()
+  initWakeLock()
+
+  setOnSettingsSaved(() => {
+    loadImmichAssets()
+    updateWakeLock()
+  })
+
+  // Pré-carrega metadados do Immich
+  loadImmichAssets()
+
+  // Botão Photo Mode
+  const photoModeBtn = document.getElementById('photo-mode-btn')
+  photoModeBtn?.addEventListener('click', () => {
+    _photoMode = !_photoMode
+    document.body.classList.toggle('photo-mode', _photoMode)
+    
+    // Se não estivermos em idle, o Photo Mode determina se o slideshow deve rodar
+    if (!_isIdle) {
+      if (_photoMode) startSlideshow()
+      else stopSlideshow()
+    }
+  })
 
   const urlParams = new URLSearchParams(window.location.search)
   const code      = urlParams.get('code')

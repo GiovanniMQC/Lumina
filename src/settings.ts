@@ -14,6 +14,7 @@ export interface AppSettings {
 
   // Player
   karaokeMode: boolean // true = destaque por palavra, false = apenas linha
+  keepScreenOn: boolean // true = impede a tela de desligar
 }
 
 const STORAGE_KEY = 'tabhub_settings'
@@ -24,6 +25,7 @@ const DEFAULTS: AppSettings = {
   immichAlbumIds:    [],
   slideshowInterval: 20,
   karaokeMode:       true,
+  keepScreenOn:      false,
 }
 
 // ── Leitura / Escrita ─────────────────────────────────────────
@@ -108,14 +110,20 @@ function populateFields(): void {
   const keyInput = document.getElementById('settings-immich-key') as HTMLInputElement | null
   const intInput = document.getElementById('settings-slideshow-interval') as HTMLInputElement | null
   const karaokeToggle = document.getElementById('settings-karaoke') as HTMLInputElement | null
+  const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
 
   if (urlInput) urlInput.value = s.immichUrl
   if (keyInput) keyInput.value = s.immichApiKey
   if (intInput) intInput.value = String(s.slideshowInterval)
   if (karaokeToggle) karaokeToggle.checked = s.karaokeMode
+  if (wakelockToggle) wakelockToggle.checked = s.keepScreenOn
 
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
+
+  // Oculta a lista de álbuns até clicar em buscar (ou podemos mantê-la vazia)
+  const listEl = document.getElementById('settings-albums-list')
+  if (listEl) listEl.innerHTML = ''
 }
 
 function saveAndClose(): void {
@@ -123,17 +131,25 @@ function saveAndClose(): void {
   const keyInput = document.getElementById('settings-immich-key') as HTMLInputElement | null
   const intInput = document.getElementById('settings-slideshow-interval') as HTMLInputElement | null
   const karaokeToggle = document.getElementById('settings-karaoke') as HTMLInputElement | null
+  const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
 
   const newSettings: Partial<AppSettings> = {
     immichUrl:         urlInput?.value.trim() ?? '',
     immichApiKey:      keyInput?.value.trim() ?? '',
     slideshowInterval: parseInt(intInput?.value ?? '20', 10) || 20,
     karaokeMode:       karaokeToggle?.checked ?? true,
+    keepScreenOn:      wakelockToggle?.checked ?? false,
   }
 
-  // Salva também os álbuns selecionados
-  const checkedAlbums = document.querySelectorAll<HTMLInputElement>('#settings-albums-list input[type="checkbox"]:checked')
-  newSettings.immichAlbumIds = Array.from(checkedAlbums).map(cb => cb.value)
+  // Salva também os álbuns selecionados (apenas se a lista estiver preenchida no DOM)
+  const listEl = document.getElementById('settings-albums-list')
+  if (listEl && listEl.children.length > 0) {
+    const checkedAlbums = document.querySelectorAll<HTMLInputElement>('#settings-albums-list input[type="checkbox"]:checked')
+    newSettings.immichAlbumIds = Array.from(checkedAlbums).map(cb => cb.value)
+  } else {
+    // Se não carregou a lista no DOM nesta sessão, mantém os álbuns que já estavam salvos
+    newSettings.immichAlbumIds = getSettings().immichAlbumIds
+  }
 
   saveSettings(newSettings)
   document.body.classList.toggle('no-karaoke', !newSettings.karaokeMode)
@@ -159,7 +175,8 @@ async function handleFetchAlbums(): Promise<void> {
   if (listEl)   listEl.innerHTML = ''
 
   try {
-    const albums = await fetchImmichAlbums(url, key)
+    const baseUrl = url.replace(/\/$/, '')
+    const albums = await fetchImmichAlbums(baseUrl, key)
     const saved  = getSettings().immichAlbumIds
 
     if (!albums.length) {
@@ -179,14 +196,33 @@ async function handleFetchAlbums(): Promise<void> {
       `).join('')
     }
   } catch (err) {
-    if (statusEl) statusEl.textContent = `Erro ao conectar: ${(err as Error).message}`
+    const msg = (err as Error).message
+    if (msg === 'Failed to fetch') {
+      if (statusEl) statusEl.textContent = 'Erro de Rede. Verifique se o IP e a Porta (ex: :2283) estão corretos.'
+    } else if (msg.includes('500')) {
+      if (statusEl) statusEl.textContent = 'Erro 500: Falha ao conectar. Você esqueceu da porta? (ex: http://192.168.1.x:2283)'
+    } else {
+      if (statusEl) statusEl.textContent = `Erro ao conectar: ${msg}`
+    }
   }
 }
 
-async function fetchImmichAlbums(url: string, key: string): Promise<ImmichAlbum[]> {
-  const res = await fetch(`${url}/api/albums`, {
-    headers: { 'x-api-key': key, 'Accept': 'application/json' }
-  })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+async function fetchImmichAlbums(baseUrl: string, key: string): Promise<ImmichAlbum[]> {
+  const proxyUrl = '/immich-proxy'
+  const headers = { 
+    'x-api-key': key, 
+    'Accept': 'application/json',
+    'x-immich-url': baseUrl 
+  }
+
+  const res = await fetch(`${proxyUrl}/api/albums`, { headers })
+  if (!res.ok) {
+    if (res.status === 404) {
+      // Fallback para versões mais antigas do Immich
+      const resOld = await fetch(`${proxyUrl}/api/album`, { headers })
+      if (resOld.ok) return resOld.json()
+    }
+    throw new Error(`HTTP ${res.status}`)
+  }
   return res.json()
 }

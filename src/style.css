@@ -550,6 +550,40 @@ html, body {
   transition: opacity var(--transition-slow);
 }
 
+/* ── Slideshow Immich ──────────────────────────────────────── */
+.slideshow-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 2s ease-in-out;
+  z-index: 1;
+}
+
+.slideshow-img.visible {
+  opacity: 0.6; /* Deixa um pouco escuro para o relógio aparecer bem */
+}
+
+.slideshow-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.idle-content {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+}
+
+
 .idle-overlay.active {
   opacity: 1;
   pointer-events: all;
@@ -718,6 +752,410 @@ html, body {
   display: none; /* handled by mask */
 }
 
+
+#bottom-controls {
+  position: fixed;
+  bottom: var(--space-xl);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  display: flex;
+  gap: var(--space-md);
+  opacity: 0;
+  transition: all var(--transition-fast);
+}
+
+#nav-dots:hover ~ #bottom-controls,
+#bottom-controls:hover {
+  opacity: 1;
+}
+
+#settings-btn, #photo-mode-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-full);
+  background: rgba(255 255 255 / 0.15);
+  border: 1px solid rgba(255 255 255 / 0.1);
+  color: rgba(255 255 255 / 0.9);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(12px);
+  transition: all var(--transition-fast);
+}
+
+#settings-btn:hover, #photo-mode-btn:hover {
+  background: rgba(255 255 255 / 0.25);
+  color: #fff;
+}
+
+/* ── Modo Foto (Photo Mode) ───────────────────────────────── */
+body.photo-mode #swipe-container {
+  height: 100% !important;
+}
+
+body.photo-mode #lyrics-container {
+  display: none !important;
+}
+
+body.photo-mode #bg-layer {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+body.photo-mode .idle-overlay {
+  opacity: 1 !important;
+  pointer-events: none !important; 
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 50 !important;
+}
+
+body.photo-mode #clock-widget {
+  z-index: 100 !important;
+}
+
+body.photo-mode #clock-time {
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.8);
+}
+body.photo-mode #clock-date {
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+/* Oculta apenas o relógio do idle (idle-clock) quando tocando música */
+body.photo-mode:not(.is-idle) .idle-content {
+  opacity: 0 !important;
+  display: none !important;
+}
+
+/* Transforma o player em um widget menor no canto inferior esquerdo */
+body.photo-mode #now-playing {
+  position: absolute;
+  bottom: 80px; /* Acima dos botões inferiores */
+  left: var(--space-xl);
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: var(--space-md);
+  border-radius: var(--radius-lg);
+  max-width: 400px;
+  align-items: center;
+  gap: var(--space-md);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transition: all var(--transition-med);
+}
+
+body.photo-mode #album-art {
+  width: 90px;
+  height: 90px;
+}
+
+body.photo-mode #album-art-glow {
+  display: none;
+}
+
+body.photo-mode #track-title {
+  font-size: 1.4rem;
+}
+
+body.photo-mode #track-artist {
+  font-size: 1rem;
+}
+
+body.photo-mode .slideshow-img.visible {
+  opacity: 1.0; /* Fotos 100% visíveis, já que a hora e o player estão por cima com sombras/fundos */
+}
+
+#settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 2000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition-med);
+}
+
+#settings-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#settings-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -45%) scale(0.95);
+  width: 90%;
+  max-width: 600px;
+  max-height: 85vh;
+  background: rgba(20, 20, 20, 0.7);
+  border: 1px solid rgba(255 255 255 / 0.1);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+  z-index: 2001;
+  display: flex;
+  flex-direction: column;
+  opacity: 0;
+  pointer-events: none;
+  transition: all var(--transition-med);
+  backdrop-filter: blur(24px);
+}
+
+#settings-modal.open {
+  opacity: 1;
+  pointer-events: all;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.settings-header {
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid rgba(255 255 255 / 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.settings-header h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+#settings-close {
+  background: transparent;
+  border: none;
+  color: var(--clr-text-muted);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-fast);
+}
+
+#settings-close:hover {
+  background: rgba(255 255 255 / 0.1);
+  color: var(--clr-text);
+}
+
+.settings-body {
+  padding: var(--space-lg);
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.settings-section-title {
+  font-size: 1.1rem;
+  color: var(--clr-dynamic);
+  margin: 0 0 var(--space-md) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.settings-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255 255 255 / 0.03);
+  padding: var(--space-md);
+  border-radius: var(--radius-md);
+}
+
+.settings-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-row-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+.settings-row-desc {
+  font-size: 0.9rem;
+  color: var(--clr-text-muted);
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: var(--space-md);
+}
+
+.settings-field label {
+  font-size: 0.95rem;
+  color: var(--clr-text-muted);
+}
+
+.settings-field input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255 255 255 / 0.1);
+  color: var(--clr-text);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  transition: border-color var(--transition-fast);
+}
+
+.settings-field input:focus {
+  outline: none;
+  border-color: var(--clr-dynamic);
+}
+
+.settings-status {
+  font-size: 0.9rem;
+  color: var(--clr-text-muted);
+  margin-top: 8px;
+}
+
+.settings-albums-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: var(--space-md);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.album-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255 255 255 / 0.02);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.album-checkbox-label:hover {
+  background: rgba(255 255 255 / 0.05);
+}
+
+.album-checkbox-name {
+  flex: 1;
+}
+
+.album-checkbox-count {
+  font-size: 0.85rem;
+  color: var(--clr-text-faint);
+}
+
+.settings-footer {
+  padding: var(--space-md) var(--space-lg);
+  border-top: 1px solid rgba(255 255 255 / 0.05);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.btn-secondary {
+  background: rgba(255 255 255 / 0.1);
+  color: var(--clr-text);
+  border: none;
+  padding: 10px 16px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.btn-secondary:hover {
+  background: rgba(255 255 255 / 0.2);
+}
+
+.btn-primary {
+  background: var(--clr-dynamic);
+  color: #000;
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: transform var(--transition-fast), filter var(--transition-fast);
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  filter: brightness(1.2);
+}
+
+/* Toggle Switch CSS */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-track {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(255 255 255 / 0.1);
+  border-radius: 34px;
+  transition: .4s;
+}
+.toggle-thumb {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  border-radius: 50%;
+  transition: .4s;
+}
+.toggle-switch input:checked + .toggle-track {
+  background-color: var(--clr-dynamic);
+}
+.toggle-switch input:checked + .toggle-track .toggle-thumb {
+  transform: translateX(22px);
+}
+
+/* Modo Sem Karaokê (Global) */
+body.no-karaoke .lyric-word.upcoming-word,
+body.no-karaoke .lyric-word.sung,
+body.no-karaoke .lyric-word.current-word {
+  color: inherit !important;
+  text-shadow: none !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+body.no-karaoke .lyric-line.active {
+  color: var(--clr-dynamic);
+  text-shadow:
+    0 0 12px var(--clr-dynamic),
+    0 0 30px rgba(var(--clr-dynamic-rgb) / 0.6);
+}
+
+body.no-karaoke .lyric-line.past {
+  color: rgba(255 255 255 / 0.75);
+}
+
+body.no-karaoke .lyric-line.near {
+  color: rgba(255 255 255 / 0.6);
+}
+
+body.no-karaoke .lyric-line.upcoming {
+  color: rgba(255 255 255 / 0.3);
+}
 
 /* ── Weather Page ─────────────────────────────────────────── */
 #weather-page {
