@@ -21,6 +21,7 @@ export interface AppSettings {
   amoledMode: boolean // true = tela preta com apenas relógio à noite
   amoledStartTime: string // ex: "22:00"
   amoledEndTime: string // ex: "06:00"
+  amoledLargeClock: boolean // true = relógio 2x maior no modo amoled
 }
 
 const STORAGE_KEY = 'tabhub_settings'
@@ -36,6 +37,7 @@ const DEFAULTS: AppSettings = {
   amoledMode:        true,
   amoledStartTime:   '22:00',
   amoledEndTime:     '06:00',
+  amoledLargeClock:  false,
 }
 
 // ── Leitura / Escrita ─────────────────────────────────────────
@@ -171,6 +173,7 @@ function populateFields(): void {
   const amoledToggle = document.getElementById('settings-amoled') as HTMLInputElement | null
   const amoledStart = document.getElementById('settings-amoled-start') as HTMLInputElement | null
   const amoledEnd = document.getElementById('settings-amoled-end') as HTMLInputElement | null
+  const amoledLargeClock = document.getElementById('settings-amoled-large') as HTMLInputElement | null
 
   if (urlInput) urlInput.value = s.immichUrl
   if (keyInput) keyInput.value = s.immichApiKey
@@ -181,10 +184,12 @@ function populateFields(): void {
   if (amoledToggle) amoledToggle.checked = s.amoledMode
   if (amoledStart) amoledStart.value = s.amoledStartTime
   if (amoledEnd) amoledEnd.value = s.amoledEndTime
+  if (amoledLargeClock) amoledLargeClock.checked = s.amoledLargeClock
 
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
   document.body.classList.toggle('no-photo-lyrics', !s.photoModeLyrics)
+  document.body.classList.toggle('amoled-large-clock', s.amoledLargeClock)
 
   // Oculta a lista de álbuns até clicar em buscar (ou podemos mantê-la vazia)
   const listEl = document.getElementById('settings-albums-list')
@@ -201,6 +206,7 @@ function saveAndClose(): void {
   const amoledToggle = document.getElementById('settings-amoled') as HTMLInputElement | null
   const amoledStart = document.getElementById('settings-amoled-start') as HTMLInputElement | null
   const amoledEnd = document.getElementById('settings-amoled-end') as HTMLInputElement | null
+  const amoledLargeClock = document.getElementById('settings-amoled-large') as HTMLInputElement | null
 
   let finalUrl = urlInput?.value.trim() ?? ''
   if (finalUrl && !finalUrl.startsWith('http')) {
@@ -217,6 +223,7 @@ function saveAndClose(): void {
     amoledMode:        amoledToggle?.checked ?? false,
     amoledStartTime:   amoledStart?.value || '22:00',
     amoledEndTime:     amoledEnd?.value || '06:00',
+    amoledLargeClock:  amoledLargeClock?.checked ?? false,
   }
 
   // Salva também os álbuns selecionados (apenas se a lista estiver preenchida no DOM)
@@ -232,6 +239,7 @@ function saveAndClose(): void {
   saveSettings(newSettings)
   document.body.classList.toggle('no-karaoke', !newSettings.karaokeMode)
   document.body.classList.toggle('no-photo-lyrics', !newSettings.photoModeLyrics)
+  document.body.classList.toggle('amoled-large-clock', !!newSettings.amoledLargeClock)
   _onSettingsSaved?.()
   closeSettings()
 }

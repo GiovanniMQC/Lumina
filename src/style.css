@@ -1338,8 +1338,8 @@ body.no-karaoke .lyric-line.upcoming {
   grid-template-rows: auto auto 1fr auto;
   gap: var(--space-md);
   padding-top: calc(var(--space-2xl) + 8px);
-  height: 100%;
-  overflow: hidden;
+  padding-bottom: var(--space-xl);
+  min-height: 100%;
 }
 
 #weather-header {
@@ -1699,7 +1699,14 @@ body.amoled-active #now-playing,
 body.amoled-active #lyrics-container,
 body.amoled-active #photo-mode-lyrics,
 body.amoled-active #bottom-controls,
+body.amoled-active #nav-dots,
 body.amoled-active #fullscreen-btn {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+body.amoled-pitch-black #clock-widget {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
@@ -1721,6 +1728,10 @@ body.amoled-active #clock-widget:hover {
 
 body.amoled-active #mini-weather {
   justify-content: center !important;
+}
+
+body.amoled-active.amoled-large-clock #clock-widget {
+  zoom: 2.2; /* Relógio ainda maior no modo AMOLED grande */
 }
 
 @keyframes amoled-float {

@@ -3,6 +3,7 @@
 // ================================================================
 
 import { getSettings } from './settings'
+import { navigateTo } from './navigation'
 
 const CHECK_INTERVAL_MS = 10000 // Checa a cada 10s
 const WAKE_DURATION_MS = 10000  // Fica aceso por 10s após interação
@@ -31,6 +32,9 @@ function wakeUp(): void {
   if (document.body.classList.contains('amoled-active')) {
     document.body.classList.remove('amoled-active')
   }
+  if (document.body.classList.contains('amoled-pitch-black')) {
+    document.body.classList.remove('amoled-pitch-black')
+  }
   
   isAwake = true
   
@@ -47,14 +51,34 @@ function checkAmoledState(): void {
   
   if (!s.amoledMode || isAwake) {
     document.body.classList.remove('amoled-active')
+    document.body.classList.remove('amoled-pitch-black')
     return
   }
   
   if (isNightTime(s.amoledStartTime, s.amoledEndTime)) {
-    document.body.classList.add('amoled-active')
+    if (!document.body.classList.contains('amoled-active')) {
+      document.body.classList.add('amoled-active')
+      navigateTo(0, false) // Força voltar para a página do player onde está o relógio
+    }
+    
+    // Entre meia-noite (00:00) e 5 da manhã (05:00), ativa modo breu total
+    if (isPitchBlackTime()) {
+      document.body.classList.add('amoled-pitch-black')
+    } else {
+      document.body.classList.remove('amoled-pitch-black')
+    }
   } else {
     document.body.classList.remove('amoled-active')
+    document.body.classList.remove('amoled-pitch-black')
   }
+}
+
+function isPitchBlackTime(): boolean {
+  const now = new Date()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const startTotal = 0 // 00:00
+  const endTotal = 5 * 60 // 05:00
+  return currentMinutes >= startTotal && currentMinutes <= endTotal
 }
 
 function isNightTime(startStr: string, endStr: string): boolean {
