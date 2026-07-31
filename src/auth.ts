@@ -138,7 +138,22 @@ export function getStoredTokens(): TokenSet | null {
   const expiresAt = localStorage.getItem(STORAGE_EXPIRES_AT)
 
   if (!accessToken || !refreshToken || !expiresAt) return null
-  return { accessToken, refreshToken, expiresAt: Number(expiresAt) }
+  
+  return {
+    accessToken,
+    refreshToken,
+    expiresAt: parseInt(expiresAt, 10),
+  }
+}
+
+export function importRefreshToken(token: string): void {
+  localStorage.setItem(STORAGE_ACCESS_TOKEN, 'import_dummy') // Passa na checagem inicial
+  localStorage.setItem(STORAGE_REFRESH_TOKEN, token)
+  localStorage.setItem(STORAGE_EXPIRES_AT, '0') // Força o refresh na próxima verificação
+}
+
+export function exportRefreshToken(): string | null {
+  return localStorage.getItem(STORAGE_REFRESH_TOKEN)
 }
 
 export function clearTokens(): void {

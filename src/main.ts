@@ -11,6 +11,7 @@ import {
   initiateLogin,
   isTokenExpired,
   refreshAccessToken,
+  importRefreshToken,
   type TokenSet,
 } from './auth'
 
@@ -220,6 +221,13 @@ async function bootstrap(): Promise<void> {
   const urlParams = new URLSearchParams(window.location.search)
   const code      = urlParams.get('code')
   const error     = urlParams.get('error')
+  const extToken  = urlParams.get('refresh_token')
+
+  // Se recebemos um token via URL (exportado de outro dispositivo local), importamos
+  if (extToken) {
+    importRefreshToken(extToken)
+    window.history.replaceState({}, '', window.location.pathname)
+  }
 
   if (error) {
     console.error('[auth] Erro na autorização:', error)

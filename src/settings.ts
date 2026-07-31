@@ -3,6 +3,8 @@
 //                (localStorage) + UI do painel de Settings
 // ================================================================
 
+import { exportRefreshToken, importRefreshToken } from './auth'
+
 // ── Estrutura das Configurações ────────────────────────────────
 
 export interface AppSettings {
@@ -98,6 +100,46 @@ export function initSettings(): void {
   photoLyricsToggle?.addEventListener('change', () => {
     document.body.classList.toggle('no-photo-lyrics', !photoLyricsToggle.checked)
   })
+
+  // Exportar Token para Hub/Assistente
+  const exportBtn = document.getElementById('settings-export-token')
+  exportBtn?.addEventListener('click', () => {
+    const token = exportRefreshToken()
+    if (!token) {
+      alert('Você precisa fazer o login no Spotify primeiro!')
+      return
+    }
+    // Sempre forçamos o path para '/' pois o Nginx não tem roteamento SPA configurado por padrão
+    const url = `${window.location.origin}/?refresh_token=${token}`
+    
+    navigator.clipboard.writeText(url)
+      .then(() => alert('Link copiado com sucesso! Cole na sua rotina do Google ou envie para o Nest Hub.'))
+      .catch(() => prompt('Copie o link abaixo:', url))
+  })
+
+  // Importar Token Manualmente
+  const importBtn = document.getElementById('settings-import-btn')
+  const importInput = document.getElementById('settings-import-token') as HTMLInputElement | null
+  importBtn?.addEventListener('click', () => {
+    const val = importInput?.value.trim()
+    if (!val) return alert('Cole o link ou o token primeiro!')
+    
+    let token = val
+    // Se colou o link inteiro, extrai o token
+    if (val.includes('refresh_token=')) {
+      try {
+        const parsedUrl = new URL(val)
+        token = parsedUrl.searchParams.get('refresh_token') || val
+      } catch {
+        // Fallback se não for uma URL válida
+        token = val.split('refresh_token=')[1]?.split('&')[0] || val
+      }
+    }
+    
+    importRefreshToken(token)
+    alert('Token importado! A página será recarregada para aplicar.')
+    window.location.reload()
+  })
 }
 
 function openSettings(): void {
@@ -145,8 +187,13 @@ function saveAndClose(): void {
   const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
   const photoLyricsToggle = document.getElementById('settings-photo-lyrics') as HTMLInputElement | null
 
+  let finalUrl = urlInput?.value.trim() ?? ''
+  if (finalUrl && !finalUrl.startsWith('http')) {
+    finalUrl = 'http://' + finalUrl
+  }
+
   const newSettings: Partial<AppSettings> = {
-    immichUrl:         urlInput?.value.trim() ?? '',
+    immichUrl:         finalUrl,
     immichApiKey:      keyInput?.value.trim() ?? '',
     slideshowInterval: parseInt(intInput?.value ?? '20', 10) || 20,
     karaokeMode:       karaokeToggle?.checked ?? true,
@@ -189,7 +236,9 @@ async function handleFetchAlbums(): Promise<void> {
   if (listEl)   listEl.innerHTML = ''
 
   try {
-    const baseUrl = url.replace(/\/$/, '')
+    let baseUrl = url.replace(/\/$/, '')
+    if (!baseUrl.startsWith('http')) baseUrl = 'http://' + baseUrl
+
     const albums = await fetchImmichAlbums(baseUrl, key)
     const saved  = getSettings().immichAlbumIds
 

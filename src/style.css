@@ -212,7 +212,7 @@ html, body {
 #swipe-container {
   display: flex;
   width: 100%;
-  height: calc(100% - 44px); /* espaço para os dots */
+  height: 100%; /* Ocupa tudo, para o idle-overlay não deixar barra preta embaixo */
   will-change: transform;
 }
 
@@ -229,6 +229,7 @@ html, body {
   display: flex;
   flex-direction: column;
   padding: var(--space-xl);
+  padding-bottom: 60px; /* Espaço para não encavalar com os dots */
   gap: var(--space-xl);
   height: 100%;
 }
@@ -275,7 +276,7 @@ html, body {
   top: var(--space-xl);
   right: var(--space-xl);
   text-align: right;
-  z-index: 20;
+  z-index: 100; /* Sempre acima do idle-overlay (z-index 50) */
   cursor: pointer;
   transition: transform var(--transition-spring);
 }
@@ -297,7 +298,7 @@ html, body {
   letter-spacing: -0.02em;
   color: var(--clr-text);
   line-height: 1;
-  text-shadow: 0 0 40px rgba(255 255 255 / 0.2);
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.8);
 }
 
 #clock-date {
@@ -308,6 +309,7 @@ html, body {
   letter-spacing: 0.05em;
   text-transform: uppercase;
   margin-top: var(--space-xs);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 #mini-weather {
@@ -318,9 +320,12 @@ html, body {
   margin-top: var(--space-sm);
   font-family: var(--font-body);
   font-size: clamp(0.8rem, 1.6vw, 1.05rem);
-  color: var(--clr-text-muted);
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
   animation: fadeIn 0.6s ease both;
+  transition: color var(--transition-fast);
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6);
+  font-weight: 500;
 }
 
 #mini-weather-emoji {
@@ -620,12 +625,7 @@ html, body {
 }
 
 .idle-content {
-  position: relative;
-  z-index: 10;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-xl);
+  display: none !important;
 }
 
 
@@ -634,8 +634,11 @@ html, body {
   pointer-events: all;
 }
 
-/* Oculta os itens do player quando em idle, exceto o idle-overlay */
-#player-page.is-idle > :not(.idle-overlay) {
+/* Oculta apenas os itens musicais quando em idle (mantém idle-overlay e clock-widget visíveis) */
+#player-page.is-idle > #bg-image,
+#player-page.is-idle > #now-playing,
+#player-page.is-idle > #lyrics-container,
+#player-page.is-idle > #photo-mode-lyrics {
   opacity: 0 !important;
   pointer-events: none !important;
 }
@@ -888,35 +891,7 @@ body.photo-mode .idle-overlay {
   inset: 0 !important;
   z-index: 50 !important;
 }
-
-body.photo-mode #clock-widget {
-  z-index: 100 !important;
-}
-
-body.photo-mode #clock-time {
-  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.8);
-}
-body.photo-mode #clock-date {
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-}
-body.photo-mode #mini-weather {
-  color: rgba(255, 255, 255, 0.9);
-  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9), 0 0 12px rgba(0, 0, 0, 0.6);
-  font-weight: 500;
-}
-
-
-/* Oculta a tela idle padrão no modo foto */
-body.photo-mode .idle-content {
-  display: none !important;
-}
-
-/* Garante que o relógio principal (que possui clima e zoom) nunca suma no modo foto */
-body.photo-mode #player-page.is-idle > #clock-widget {
-  opacity: 1;
-  pointer-events: auto;
-}
-
+/* (Regras globais agora garantem que o clock-widget não some e a tela idle padrão não aparece) */
 /* Transforma o player em um widget menor no canto inferior esquerdo */
 body.photo-mode #now-playing {
   position: absolute;
@@ -1336,7 +1311,7 @@ body.no-karaoke .lyric-line.upcoming {
   top: var(--space-xl);
   right: var(--space-xl);
   text-align: right;
-  z-index: 10;
+  z-index: 100;
 }
 
 #weather-clock-time {
@@ -1681,7 +1656,8 @@ body.no-karaoke .lyric-line.upcoming {
   }
 
   #weather-page {
-    /* Em landscape o weather-page já é flex coluna */
+    padding-top: var(--space-2xl);
+    padding-bottom: 60px;
   }
 
   #weather-content {

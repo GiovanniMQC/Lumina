@@ -277,6 +277,23 @@
           <div id="settings-albums-list" class="settings-albums-list"></div>
         </section>
 
+        <!-- Seção: Spotify Auth -->
+        <section class="settings-section">
+          <h3 class="settings-section-title">Autorização Local (Spotify)</h3>
+          <p style="font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 12px; line-height: 1.4;">
+            O Spotify bloqueia logins diretos por IP (como 192.168.x.x). Para usar no Nest Hub, faça o login aqui neste dispositivo (acessando via localhost), gere o link de exportação abaixo e abra esse link no Nest Hub/Rotina do Google.
+          </p>
+          <button id="settings-export-token" class="btn-secondary" style="width: 100%; margin-bottom: 16px;">Copiar Link de Acesso Rápido</button>
+          
+          <div class="settings-field">
+            <label for="settings-import-token">Importar Token Manualmente (Cole o link ou o token)</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="settings-import-token" placeholder="Cole aqui..." autocomplete="off" style="flex: 1;" />
+              <button id="settings-import-btn" class="btn-primary" style="padding: 0 16px;">Aplicar</button>
+            </div>
+          </div>
+        </section>
+
       </div>
 
       <div class="settings-footer">

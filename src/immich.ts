@@ -166,11 +166,13 @@ async function advanceSlideshow(): Promise<void> {
 }
 
 async function fetchAssetBlob(baseUrl: string, key: string, assetId: string): Promise<string> {
+  const headers = { 
+    'x-api-key': key, 
+    'Accept': 'application/json',
+    'x-immich-url': baseUrl 
+  }
   const res = await fetch(`/immich-proxy/api/assets/${assetId}/thumbnail?size=preview`, {
-    headers: { 
-      'x-api-key': key,
-      'x-immich-url': baseUrl
-    }
+    headers
   })
   if (!res.ok) throw new Error(`HTTP ${res.status}`)
   const blob = await res.blob()

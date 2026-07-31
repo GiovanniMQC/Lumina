@@ -53,16 +53,22 @@ function windDir(deg: number): string {
 
 // ── Geolocation ───────────────────────────────────────────────
 
-async function getCoords(): Promise<GeolocationCoordinates> {
-  return new Promise((resolve, reject) => {
+// Vila Nova de Famalicão, Portugal
+const DEFAULT_COORDS = { latitude: 41.4055, longitude: -8.5196 }
+
+async function getCoords(): Promise<{ latitude: number; longitude: number }> {
+  return new Promise((resolve) => {
     if (!navigator.geolocation) {
-      reject(new Error('Geolocalização não disponível'))
+      resolve(DEFAULT_COORDS)
       return
     }
     navigator.geolocation.getCurrentPosition(
       pos  => resolve(pos.coords),
-      err  => reject(err),
-      { timeout: 10000, maximumAge: 300_000 }
+      err  => {
+        console.warn('Geolocalização falhou/negada, usando local padrão:', err.message)
+        resolve(DEFAULT_COORDS)
+      },
+      { timeout: 5000, maximumAge: 300_000 }
     )
   })
 }

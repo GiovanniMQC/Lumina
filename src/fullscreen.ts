@@ -18,6 +18,7 @@ export function initFullscreen(): void {
 
   // Atualiza ícone inicial
   updateIcon()
+  scheduleHide() // Esconde inicialmente após o delay
 }
 
 function toggleFullscreen(): void {
@@ -30,18 +31,10 @@ function toggleFullscreen(): void {
 
 function onFullscreenChange(): void {
   updateIcon()
-  if (document.fullscreenElement) {
-    // Entrou em fullscreen → esconde após delay
-    scheduleHide()
-  } else {
-    // Saiu do fullscreen → mostra o botão
-    clearHideTimer()
-    showButton()
-  }
+  showBriefly()
 }
 
 function showBriefly(): void {
-  if (!document.fullscreenElement) return
   showButton()
   scheduleHide()
 }
