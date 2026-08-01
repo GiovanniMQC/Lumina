@@ -1284,19 +1284,23 @@ body.no-karaoke .lyric-line.upcoming {
   position: relative; /* needed for absolute canvas */
 }
 
-#weather-bg-image {
+#weather-bg-wrap {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  transition: background-image 1.5s ease-in-out;
+  overflow: hidden;
   pointer-events: none;
   z-index: 0;
   background-color: #0a0a0a;
-  opacity: 1;
-  filter: blur(2px);
+}
+
+#weather-bg-image {
+  position: absolute;
+  inset: -60px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  /* Blur estático: aplicado uma vez, sem transition (economiza GPU/CPU) */
+  filter: blur(30px) saturate(1.3) brightness(0.6);
 }
 
 /* Canvas de partículas — cobre toda a página de clima */
@@ -1315,37 +1319,39 @@ body.no-karaoke .lyric-line.upcoming {
   inset: 0;
   pointer-events: none;
   z-index: 2;
-  transition: background 2s ease;
-  background-color: rgba(0, 0, 0, 0.4); /* Escurecimento fixo para sempre garantir leitura */
+  transition: background-color 2s ease;
+  /* Escurecimento fixo para sempre garantir leitura */
+  background-color: rgba(0, 0, 0, 0.45);
 }
 
 /* Garante que o conteúdo fique acima do canvas */
-#weather-page > *:not(#weather-canvas):not(#weather-bg-overlay):not(#weather-bg-image) {
+#weather-page > *:not(#weather-canvas):not(#weather-bg-overlay):not(#weather-bg-image):not(#weather-bg-wrap) {
   position: relative;
   z-index: 3;
 }
 
 /* ── Gradientes por condição ──────────────────────────────── */
+/* Usam background-image para NÃO sobrescrever o escurecimento fixo do overlay */
 #weather-bg-overlay.wx-clear-day {
-  background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 200, 50, 0.15) 0%, transparent 70%);
+  background-image: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255, 200, 50, 0.15) 0%, transparent 70%);
 }
 #weather-bg-overlay.wx-clear-night {
-  background: radial-gradient(ellipse 60% 50% at 80% 10%, rgba(100, 130, 255, 0.12) 0%, transparent 70%);
+  background-image: radial-gradient(ellipse 60% 50% at 80% 10%, rgba(100, 130, 255, 0.12) 0%, transparent 70%);
 }
 #weather-bg-overlay.wx-cloudy {
-  background: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(150, 160, 190, 0.10) 0%, transparent 70%);
+  background-image: radial-gradient(ellipse 90% 60% at 50% 0%, rgba(150, 160, 190, 0.10) 0%, transparent 70%);
 }
 #weather-bg-overlay.wx-rain {
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(60, 100, 180, 0.18) 0%, transparent 70%);
+  background-image: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(60, 100, 180, 0.18) 0%, transparent 70%);
 }
 #weather-bg-overlay.wx-storm {
-  background: radial-gradient(ellipse 80% 70% at 50% 0%, rgba(80, 30, 160, 0.22) 0%, transparent 70%);
+  background-image: radial-gradient(ellipse 80% 70% at 50% 0%, rgba(80, 30, 160, 0.22) 0%, transparent 70%);
 }
 #weather-bg-overlay.wx-snow {
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 210, 255, 0.15) 0%, transparent 70%);
+  background-image: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(180, 210, 255, 0.15) 0%, transparent 70%);
 }
 #weather-bg-overlay.wx-fog {
-  background: radial-gradient(ellipse 100% 80% at 50% 30%, rgba(140, 150, 170, 0.15) 0%, transparent 70%);
+  background-image: radial-gradient(ellipse 100% 80% at 50% 30%, rgba(140, 150, 170, 0.15) 0%, transparent 70%);
 }
 
 #weather-clock-widget {

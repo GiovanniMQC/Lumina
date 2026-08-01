@@ -203,13 +203,31 @@ function effectToBgClass(e: WeatherEffect): string {
 const BACKGROUND_IMAGES: Record<WeatherEffect, string> = {
   'clear-day':   'https://images.unsplash.com/photo-1601297183305-6df142704ea2?q=80&w=1920&auto=format&fit=crop',
   'clear-night': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1920&auto=format&fit=crop',
-  'cloudy':      'https://images.unsplash.com/photo-1534088568595-a066f410cbda?q=80&w=1920&auto=format&fit=crop',
+  'cloudy':      'https://images.unsplash.com/photo-1501630834273-4b5604d2ee31?q=80&w=1920&auto=format&fit=crop',
   'drizzle':     'https://images.unsplash.com/photo-1541692641319-981cc79ee10a?q=80&w=1920&auto=format&fit=crop',
   'rain':        'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1920&auto=format&fit=crop',
-  'storm':       'https://images.unsplash.com/photo-1605727216801-e27ce1d0ce3c?q=80&w=1920&auto=format&fit=crop',
+  'storm':       'https://images.unsplash.com/photo-1531265726475-52ad60219627?q=80&w=1920&auto=format&fit=crop',
   'snow':        'https://images.unsplash.com/photo-1491002052546-bf38f186af56?q=80&w=1920&auto=format&fit=crop',
   'fog':         'https://images.unsplash.com/photo-1487621167305-5d248087c724?q=80&w=1920&auto=format&fit=crop',
   'none':        '',
+}
+
+let _bgImageUrl = ''
+
+function setBgImage(bgImage: HTMLElement, url: string): void {
+  _bgImageUrl = url
+  if (!url) {
+    bgImage.style.backgroundImage = ''
+    return
+  }
+  const img = new Image()
+  img.onload = () => {
+    if (_bgImageUrl === url) bgImage.style.backgroundImage = `url('${url}')`
+  }
+  img.onerror = () => {
+    console.warn('[weather] Falha ao carregar imagem de fundo:', url)
+  }
+  img.src = url
 }
 
 function applyWeatherAnimation(effect: WeatherEffect): void {
@@ -225,14 +243,9 @@ function applyWeatherAnimation(effect: WeatherEffect): void {
     if (cls) overlay.classList.add(cls)
   }
 
-  // Aplica imagem real de fundo
+  // Aplica imagem real de fundo (só se carregar com sucesso)
   if (bgImage) {
-    const url = BACKGROUND_IMAGES[effect]
-    if (url) {
-      bgImage.style.backgroundImage = `url('${url}')`
-    } else {
-      bgImage.style.backgroundImage = ''
-    }
+    setBgImage(bgImage, BACKGROUND_IMAGES[effect] ?? '')
   }
 
   // Aplica animacao no emoji com efeitos mais ricos
