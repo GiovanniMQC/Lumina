@@ -3,7 +3,7 @@
 //                (localStorage) + UI do painel de Settings
 // ================================================================
 
-import { exportRefreshToken, importRefreshToken } from './auth'
+import { exportRefreshToken, importRefreshToken, clearTokens } from './auth'
 
 // ── Estrutura das Configurações ────────────────────────────────
 
@@ -22,6 +22,9 @@ export interface AppSettings {
   amoledStartTime: string // ex: "22:00"
   amoledEndTime: string // ex: "06:00"
   amoledLargeClock: boolean // true = relógio 2x maior no modo amoled
+  pitchBlackMode: boolean // true = apaga até o relógio na madrugada
+  pitchBlackStartTime: string // ex: "00:00"
+  pitchBlackEndTime: string // ex: "05:00"
 }
 
 const STORAGE_KEY = 'tabhub_settings'
@@ -38,6 +41,9 @@ const DEFAULTS: AppSettings = {
   amoledStartTime:   '22:00',
   amoledEndTime:     '06:00',
   amoledLargeClock:  false,
+  pitchBlackMode:    true,
+  pitchBlackStartTime: '00:00',
+  pitchBlackEndTime:   '05:00',
 }
 
 // ── Leitura / Escrita ─────────────────────────────────────────
@@ -125,35 +131,71 @@ export function initSettings(): void {
       .catch(() => prompt('Copie o link abaixo:', url))
   })
 
-  // Importar Token Manualmente
+  // Importar Token(s) Manualmente
   const importBtn = document.getElementById('settings-import-btn')
-  const importInput = document.getElementById('settings-import-token') as HTMLInputElement | null
+  const importInput = document.getElementById('settings-import-token') as HTMLTextAreaElement | null
   importBtn?.addEventListener('click', () => {
     const val = importInput?.value.trim()
-    if (!val) return alert('Cole o link ou o token primeiro!')
+    if (!val) return alert('Cole os links ou tokens primeiro!')
     
-    let token = val
-    // Se colou o link inteiro, extrai o token
-    if (val.includes('refresh_token=')) {
-      try {
-        const parsedUrl = new URL(val)
-        token = parsedUrl.searchParams.get('refresh_token') || val
-      } catch {
-        // Fallback se não for uma URL válida
-        token = val.split('refresh_token=')[1]?.split('&')[0] || val
+    const lines = val.split('\n').map(l => l.trim()).filter(Boolean)
+    const tokens: string[] = []
+
+    for (const line of lines) {
+      let token = line
+      if (line.includes('refresh_token=')) {
+        try {
+          const parsedUrl = new URL(line)
+          token = parsedUrl.searchParams.get('refresh_token') || line
+        } catch {
+          token = line.split('refresh_token=')[1]?.split('&')[0] || line
+        }
+      }
+      if (token && !tokens.includes(token)) {
+        tokens.push(token)
       }
     }
     
-    importRefreshToken(token)
-    alert('Token importado! A página será recarregada para aplicar.')
+    if (tokens.length === 0) return alert('Nenhum token válido encontrado.')
+
+    // Assume importRefreshToken is updated in auth.ts to handle array
+    importRefreshToken(tokens)
+    alert(`${tokens.length} token(s) importado(s)! A página será recarregada para aplicar.`)
     window.location.reload()
   })
-}
+
+  // Re-autenticar / Terminar Sessão
+  const reloginBtn = document.getElementById('settings-relogin-btn')
+  reloginBtn?.addEventListener('click', () => {
+    if (!confirm('Tem certeza que deseja terminar a sessão do Spotify?\nSerá necessário fazer login novamente.')) return
+    clearTokens()
+    window.location.reload()
+  })
+} // fim de initSettings
 
 function openSettings(): void {
   document.getElementById('settings-modal')?.classList.add('open')
   document.getElementById('settings-overlay')?.classList.add('open')
   populateFields()
+  
+  // Atualiza o texto da versão no rodapé
+  const versionEl = document.getElementById('settings-version')
+  if (versionEl) {
+    versionEl.textContent = 'Carregando versão...'
+    fetch(`/version.json?t=${Date.now()}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.version) {
+          const d = new Date(data.version)
+          versionEl.textContent = `Última atualização: ${d.toLocaleDateString()} às ${d.toLocaleTimeString()}`
+        } else {
+          versionEl.textContent = 'Versão não encontrada (Modo Dev)'
+        }
+      })
+      .catch(() => {
+        versionEl.textContent = 'Versão não encontrada (Modo Dev)'
+      })
+  }
 }
 
 function closeSettings(): void {
@@ -174,6 +216,9 @@ function populateFields(): void {
   const amoledStart = document.getElementById('settings-amoled-start') as HTMLInputElement | null
   const amoledEnd = document.getElementById('settings-amoled-end') as HTMLInputElement | null
   const amoledLargeClock = document.getElementById('settings-amoled-large') as HTMLInputElement | null
+  const pitchBlackToggle = document.getElementById('settings-pitchblack') as HTMLInputElement | null
+  const pitchBlackStart = document.getElementById('settings-pitchblack-start') as HTMLInputElement | null
+  const pitchBlackEnd = document.getElementById('settings-pitchblack-end') as HTMLInputElement | null
 
   if (urlInput) urlInput.value = s.immichUrl
   if (keyInput) keyInput.value = s.immichApiKey
@@ -185,6 +230,9 @@ function populateFields(): void {
   if (amoledStart) amoledStart.value = s.amoledStartTime
   if (amoledEnd) amoledEnd.value = s.amoledEndTime
   if (amoledLargeClock) amoledLargeClock.checked = s.amoledLargeClock
+  if (pitchBlackToggle) pitchBlackToggle.checked = s.pitchBlackMode
+  if (pitchBlackStart) pitchBlackStart.value = s.pitchBlackStartTime
+  if (pitchBlackEnd) pitchBlackEnd.value = s.pitchBlackEndTime
 
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
@@ -207,6 +255,9 @@ function saveAndClose(): void {
   const amoledStart = document.getElementById('settings-amoled-start') as HTMLInputElement | null
   const amoledEnd = document.getElementById('settings-amoled-end') as HTMLInputElement | null
   const amoledLargeClock = document.getElementById('settings-amoled-large') as HTMLInputElement | null
+  const pitchBlackToggle = document.getElementById('settings-pitchblack') as HTMLInputElement | null
+  const pitchBlackStart = document.getElementById('settings-pitchblack-start') as HTMLInputElement | null
+  const pitchBlackEnd = document.getElementById('settings-pitchblack-end') as HTMLInputElement | null
 
   let finalUrl = urlInput?.value.trim() ?? ''
   if (finalUrl && !finalUrl.startsWith('http')) {
@@ -224,6 +275,9 @@ function saveAndClose(): void {
     amoledStartTime:   amoledStart?.value || '22:00',
     amoledEndTime:     amoledEnd?.value || '06:00',
     amoledLargeClock:  amoledLargeClock?.checked ?? false,
+    pitchBlackMode:    pitchBlackToggle?.checked ?? true,
+    pitchBlackStartTime: pitchBlackStart?.value || '00:00',
+    pitchBlackEndTime:   pitchBlackEnd?.value || '05:00',
   }
 
   // Salva também os álbuns selecionados (apenas se a lista estiver preenchida no DOM)

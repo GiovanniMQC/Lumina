@@ -2,6 +2,7 @@
 //  spotify.ts — Spotify Web API polling
 // ================================================================
 
+
 const API_BASE = 'https://api.spotify.com/v1'
 
 export interface SpotifyImage {
@@ -65,11 +66,38 @@ async function spotifyFetch(path: string): Promise<Response> {
   return res
 }
 
+let _rateLimitedUntil = 0
+let _consecutiveRateLimits = 0
+
 export async function getCurrentlyPlaying(): Promise<CurrentlyPlaying | null> {
+  // Se estamos em backoff por rate limit, não faz o pedido
+  if (Date.now() < _rateLimitedUntil) {
+    // Apenas retorna null silenciosamente para não poluir o console a cada ciclo de polling
+    return null
+  }
+
   const res = await spotifyFetch('/me/player/currently-playing?market=from_token')
 
+  if (res.status === 429) {
+    _consecutiveRateLimits++
+    // Rate limited — respeita o Retry-After da Spotify (em segundos)
+    const headerVal = res.headers.get('Retry-After')
+    let retryAfter = headerVal ? parseInt(headerVal, 10) : 0
+    if (isNaN(retryAfter)) retryAfter = 0
+    
+    // Aumenta o tempo base proporcionalmente aos erros consecutivos
+    const baseWait = Math.max(retryAfter, 35)
+    const waitTime = baseWait * _consecutiveRateLimits
+    
+    _rateLimitedUntil = Date.now() + (waitTime * 1000)
+    console.warn(`[spotify] Rate limited! (Falhas seguidas: ${_consecutiveRateLimits}). Aguardando ${waitTime}s antes de tentar novamente.`)
+    return null
+  }
+  
+  // Se passou do 429, zera a contagem de falhas consecutivas por limite
+  _consecutiveRateLimits = 0
+
   if (res.status === 204 || res.status === 404) {
-    // Nada tocando
     return null
   }
 

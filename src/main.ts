@@ -67,10 +67,14 @@ let _photoMode                           = false
 
 // ── Token Management ──────────────────────────────────────────
 
-async function ensureFreshToken(): Promise<string> {
+async function ensureFreshToken(force = false): Promise<string> {
+  // Sincroniza sempre com a storage local, pois a rotação de token pode ter ocorrido
+  const stored = getStoredTokens()
+  if (stored) _tokens = stored
+
   if (!_tokens) throw new Error('Não autenticado')
 
-  if (isTokenExpired(_tokens)) {
+  if (force || isTokenExpired(_tokens)) {
     _tokens = await refreshAccessToken(_tokens.refreshToken)
     updateToken(_tokens.accessToken)
   }
@@ -109,6 +113,8 @@ async function loadLyrics(state: CurrentlyPlaying): Promise<void> {
 // ── Playback Handler ──────────────────────────────────────────
 
 async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
+
+
   // Nada tocando → idle overlay
   if (!state || !state.item || !state.is_playing) {
     stopAnimationLoop()
@@ -191,6 +197,11 @@ async function bootstrap(): Promise<void> {
   setOnSettingsSaved(() => {
     loadImmichAssets()
     updateWakeLock()
+    // Se o slideshow estiver ativo, reinicia para aplicar o novo intervalo
+    if (_isIdle || _photoMode) {
+      stopSlideshow()
+      startSlideshow()
+    }
   })
 
   // Pré-carrega metadados do Immich
@@ -235,40 +246,39 @@ async function bootstrap(): Promise<void> {
 
   if (error) {
     console.error('[auth] Erro na autorização:', error)
-    showScreen('login-screen')
-    return
-  }
-
-  if (code) {
+    // Continua sem Spotify
+  } else if (code) {
     window.history.replaceState({}, '', window.location.pathname)
     try {
       _tokens = await handleCallback(code)
     } catch (err) {
       console.error('[auth] Falha no callback:', err)
-      showScreen('login-screen')
-      return
+      // Continua sem Spotify
     }
   } else {
     _tokens = getStoredTokens()
   }
 
-  if (!_tokens) {
-    showScreen('login-screen')
-    setupLoginButton()
-    return
-  }
+  let hasSpotify = false
 
-  if (isTokenExpired(_tokens)) {
-    try {
-      _tokens = await refreshAccessToken(_tokens.refreshToken)
-    } catch {
-      showScreen('login-screen')
-      setupLoginButton()
-      return
+  if (_tokens) {
+    if (isTokenExpired(_tokens)) {
+      try {
+        _tokens = await refreshAccessToken(_tokens.refreshToken)
+        hasSpotify = true
+      } catch {
+        console.warn('[auth] Token expirado e falha no refresh. Modo offline ativado.')
+      }
+    } else {
+      hasSpotify = true
     }
   }
 
-  initSpotify(_tokens.accessToken, ensureFreshToken)
+  setupLoginButton(hasSpotify)
+
+  if (hasSpotify && _tokens) {
+    initSpotify(_tokens.accessToken, ensureFreshToken)
+  }
 
   // Inicia navegação swipe (2 páginas: player + clima)
   initNavigation('swipe-container', '.nav-dot', 2)
@@ -278,12 +288,25 @@ async function bootstrap(): Promise<void> {
 
   showScreen('player-screen')
   setPlayerIdle(true)
-  startPolling(handlePlayback, 4000)
+  
+  if (hasSpotify) {
+    startPolling(handlePlayback, 10000)
+  } else {
+    // Modo sem Spotify logado: mostra a tela idle com relógio, clima e slideshow
+    startSlideshow()
+  }
 }
 
-function setupLoginButton(): void {
+function setupLoginButton(hasSpotify: boolean): void {
   const btn = document.getElementById('login-btn')
   if (!btn) return
+
+  if (hasSpotify) {
+    btn.style.display = 'none'
+    return
+  } else {
+    btn.style.display = ''
+  }
 
   if (!isConfigured()) {
     btn.textContent = '⚠ Configure o Client ID em src/auth.ts'
@@ -301,5 +324,4 @@ function setupLoginButton(): void {
 
 bootstrap().catch(err => {
   console.error('[main] Falha na inicialização:', err)
-  showScreen('login-screen')
 })

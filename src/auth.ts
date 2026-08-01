@@ -119,6 +119,18 @@ export interface TokenSet {
   expiresAt: number
 }
 
+let _activeTokenIndex = 0
+
+export function getRefreshTokens(): string[] {
+  const raw = localStorage.getItem(STORAGE_REFRESH_TOKEN)
+  if (!raw) return []
+  try {
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) return parsed
+  } catch {}
+  return [raw] // Backward compatibility with single token
+}
+
 export function saveTokens(data: {
   access_token: string
   refresh_token?: string
@@ -127,14 +139,22 @@ export function saveTokens(data: {
   const expiresAt = Date.now() + data.expires_in * 1000 - 60_000 // -1min buffer
   localStorage.setItem(STORAGE_ACCESS_TOKEN, data.access_token)
   if (data.refresh_token) {
-    localStorage.setItem(STORAGE_REFRESH_TOKEN, data.refresh_token)
+    const tokens = getRefreshTokens()
+    if (tokens.length > 0) {
+      // Update the active token in the array
+      tokens[_activeTokenIndex] = data.refresh_token
+      localStorage.setItem(STORAGE_REFRESH_TOKEN, JSON.stringify(tokens))
+    } else {
+      localStorage.setItem(STORAGE_REFRESH_TOKEN, JSON.stringify([data.refresh_token]))
+    }
   }
   localStorage.setItem(STORAGE_EXPIRES_AT, String(expiresAt))
 }
 
 export function getStoredTokens(): TokenSet | null {
   const accessToken = localStorage.getItem(STORAGE_ACCESS_TOKEN)
-  const refreshToken = localStorage.getItem(STORAGE_REFRESH_TOKEN)
+  const tokens = getRefreshTokens()
+  const refreshToken = tokens[_activeTokenIndex] || tokens[0]
   const expiresAt = localStorage.getItem(STORAGE_EXPIRES_AT)
 
   if (!accessToken || !refreshToken || !expiresAt) return null
@@ -146,14 +166,29 @@ export function getStoredTokens(): TokenSet | null {
   }
 }
 
-export function importRefreshToken(token: string): void {
+export function importRefreshToken(tokensInput: string | string[]): void {
+  const tokens = Array.isArray(tokensInput) ? tokensInput : [tokensInput]
   localStorage.setItem(STORAGE_ACCESS_TOKEN, 'import_dummy') // Passa na checagem inicial
-  localStorage.setItem(STORAGE_REFRESH_TOKEN, token)
+  localStorage.setItem(STORAGE_REFRESH_TOKEN, JSON.stringify(tokens))
   localStorage.setItem(STORAGE_EXPIRES_AT, '0') // Força o refresh na próxima verificação
+  _activeTokenIndex = 0
 }
 
 export function exportRefreshToken(): string | null {
-  return localStorage.getItem(STORAGE_REFRESH_TOKEN)
+  const tokens = getRefreshTokens()
+  return tokens.length > 0 ? tokens[0] : null
+}
+
+export function rotateToken(): boolean {
+  const tokens = getRefreshTokens()
+  if (tokens.length <= 1) return false // Não há alternativas
+  
+  _activeTokenIndex = (_activeTokenIndex + 1) % tokens.length
+  console.log(`[auth] Rate Limit atingido! Trocando para o token index ${_activeTokenIndex}`)
+  
+  // Força a expiração para pedir um novo access_token com o novo refresh_token
+  localStorage.setItem(STORAGE_EXPIRES_AT, '0')
+  return true
 }
 
 export function clearTokens(): void {
@@ -236,8 +271,14 @@ export async function refreshAccessToken(refreshToken: string): Promise<TokenSet
   })
 
   if (!res.ok) {
-    clearTokens()
-    throw new Error('Refresh token inválido. Re-autentique.')
+    const errData = await res.json().catch(() => ({}))
+    console.error('[auth] Falha ao renovar token:', res.status, errData)
+    // Só limpa os tokens se for 400 (token inválido) — não limpa em erros de rede (5xx)
+    if (res.status === 400) {
+      clearTokens()
+      throw new Error(`Refresh token inválido (${errData.error ?? res.status}). Re-autentique.`)
+    }
+    throw new Error(`Erro ao renovar token: HTTP ${res.status}`)
   }
 
   const data = await res.json()

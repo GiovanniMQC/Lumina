@@ -22,25 +22,7 @@
       <div id="bg-noise"></div>
     </div>
 
-    <!-- Tela de login -->
-    <div id="login-screen" class="screen active">
-      <div class="login-card">
-        <div class="login-logo">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="48" height="48">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-        </div>
-        <h1>TabHub</h1>
-        <p>Dashboard Spotify para seu tablet</p>
-        <button id="login-btn" class="btn-spotify">
-          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-            <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-          </svg>
-          Entrar com Spotify
-        </button>
-        <p class="login-hint">Configure seu Client ID em <code>src/auth.ts</code></p>
-      </div>
-    </div>
+
 
     <!-- Tela principal do player (com swipe) -->
     <div id="player-screen" class="screen">
@@ -118,6 +100,9 @@
         <!-- ── Página 1: Clima ─────────────────────── -->
         <div class="swipe-page" id="weather-page">
 
+          <!-- Imagem de fundo baseada no clima -->
+          <div id="weather-bg-image"></div>
+          
           <!-- Canvas para partículas animadas (chuva, neve, sol, vento) -->
           <canvas id="weather-canvas"></canvas>
           <!-- Overlay de gradiente dependente do clima -->
@@ -285,6 +270,23 @@
                 <span class="toggle-track"><span class="toggle-thumb"></span></span>
               </label>
             </div>
+
+            <div class="settings-row" style="margin-top: var(--space-lg); border-top: 1px solid rgba(255,255,255,0.1); padding-top: var(--space-lg);">
+              <div class="settings-row-info">
+                <span class="settings-row-label">Modo Breu Total (Madrugada)</span>
+                <span class="settings-row-desc">Apaga completamente a tela (esconde o relógio) em horários de sono profundo.</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="settings-pitchblack" />
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
+            <div class="settings-row" style="margin-top: var(--space-sm); justify-content: flex-start; gap: var(--space-md);">
+              <label for="settings-pitchblack-start" style="font-size: 0.9rem; color: var(--clr-text-faint);">Das</label>
+              <input type="time" id="settings-pitchblack-start" class="settings-field" style="padding: 4px 8px; max-width: 100px;" />
+              <label for="settings-pitchblack-end" style="font-size: 0.9rem; color: var(--clr-text-faint);">às</label>
+              <input type="time" id="settings-pitchblack-end" class="settings-field" style="padding: 4px 8px; max-width: 100px;" />
+            </div>
           </div>
         </section>
 
@@ -311,24 +313,42 @@
         <!-- Seção: Spotify Auth -->
         <section class="settings-section">
           <h3 class="settings-section-title">Autorização Local (Spotify)</h3>
+          
+          <div style="margin-bottom: 16px;">
+            <button id="login-btn" class="btn-spotify" style="width: 100%; margin-bottom: 8px;">
+              <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" style="vertical-align: middle; margin-right: 8px;">
+                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+              </svg>
+              Entrar com Spotify
+            </button>
+            <p class="login-hint" style="font-size: 0.75rem; text-align: center;">Configure seu Client ID em <code>src/auth.ts</code></p>
+          </div>
+
           <p style="font-size: 0.85rem; color: var(--clr-text-muted); margin-bottom: 12px; line-height: 1.4;">
             O Spotify bloqueia logins diretos por IP (como 192.168.x.x). Para usar no Nest Hub, faça o login aqui neste dispositivo (acessando via localhost), gere o link de exportação abaixo e abra esse link no Nest Hub/Rotina do Google.
           </p>
           <button id="settings-export-token" class="btn-secondary" style="width: 100%; margin-bottom: 16px;">Copiar Link de Acesso Rápido</button>
           
           <div class="settings-field">
-            <label for="settings-import-token">Importar Token Manualmente (Cole o link ou o token)</label>
-            <div style="display: flex; gap: 8px;">
-              <input type="text" id="settings-import-token" placeholder="Cole aqui..." autocomplete="off" style="flex: 1;" />
-              <button id="settings-import-btn" class="btn-primary" style="padding: 0 16px;">Aplicar</button>
-            </div>
+            <label for="settings-import-token">Importar Tokens Manualmente (Um por linha)</label>
+            <p style="font-size: 0.75rem; color: var(--clr-text-faint); margin-bottom: 8px;">O dispositivo irá rodar entre os tokens listados abaixo caso um deles atinja o limite de chamadas (Rate Limit).</p>
+            <textarea id="settings-import-token" placeholder="Cole os links ou tokens aqui (um por linha)..." autocomplete="off" style="width: 100%; height: 100px; resize: vertical; margin-bottom: 8px; font-family: monospace; font-size: 0.8rem;"></textarea>
+            <button id="settings-import-btn" class="btn-primary" style="width: 100%;">Aplicar Tokens</button>
+          </div>
+
+          <div style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 16px; padding-top: 16px;">
+            <p style="font-size: 0.8rem; color: var(--clr-text-faint); margin-bottom: 10px;">Se o Spotify não reconhece a música ou o token expirou, clique abaixo para forçar novo login (requer acesso via localhost ou HTTPS).</p>
+            <button id="settings-relogin-btn" class="btn-secondary" style="width: 100%; color: #ff6b6b; border-color: rgba(255,107,107,0.4);">
+              🔄 Terminar Sessão e Re-autenticar
+            </button>
           </div>
         </section>
 
       </div>
 
-      <div class="settings-footer">
-        <button id="settings-save" class="btn-primary">Salvar configurações</button>
+      <div class="settings-footer" style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <div id="settings-version" style="font-size: 0.75rem; color: var(--clr-text-faint);"></div>
+        <button id="settings-save" class="btn-primary" style="width: 100%;">Salvar configurações</button>
       </div>
     </div>
 

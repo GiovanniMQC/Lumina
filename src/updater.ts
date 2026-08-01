@@ -6,7 +6,7 @@
 
 const CHECK_INTERVAL_MS = 60000 // 1 minuto
 
-let currentVersion: string | null = null
+export let currentVersion: string | null = null
 
 export function initUpdater(): void {
   // Apenas no modo produção (evita atrapalhar o dev server do Vite)

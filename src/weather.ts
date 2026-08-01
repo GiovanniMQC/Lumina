@@ -200,10 +200,23 @@ function effectToBgClass(e: WeatherEffect): string {
   return map[e] ?? ''
 }
 
+const BACKGROUND_IMAGES: Record<WeatherEffect, string> = {
+  'clear-day':   'https://images.unsplash.com/photo-1601297183305-6df142704ea2?q=80&w=1920&auto=format&fit=crop',
+  'clear-night': 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1920&auto=format&fit=crop',
+  'cloudy':      'https://images.unsplash.com/photo-1534088568595-a066f410cbda?q=80&w=1920&auto=format&fit=crop',
+  'drizzle':     'https://images.unsplash.com/photo-1541692641319-981cc79ee10a?q=80&w=1920&auto=format&fit=crop',
+  'rain':        'https://images.unsplash.com/photo-1515694346937-94d85e41e6f0?q=80&w=1920&auto=format&fit=crop',
+  'storm':       'https://images.unsplash.com/photo-1605727216801-e27ce1d0ce3c?q=80&w=1920&auto=format&fit=crop',
+  'snow':        'https://images.unsplash.com/photo-1491002052546-bf38f186af56?q=80&w=1920&auto=format&fit=crop',
+  'fog':         'https://images.unsplash.com/photo-1487621167305-5d248087c724?q=80&w=1920&auto=format&fit=crop',
+  'none':        '',
+}
+
 function applyWeatherAnimation(effect: WeatherEffect): void {
   const canvas = document.getElementById('weather-canvas') as HTMLCanvasElement | null
   const overlay = document.getElementById('weather-bg-overlay')
   const emojiEl = document.getElementById('weather-emoji')
+  const bgImage = document.getElementById('weather-bg-image')
 
   // Aplica gradiente de fundo
   if (overlay) {
@@ -212,16 +225,39 @@ function applyWeatherAnimation(effect: WeatherEffect): void {
     if (cls) overlay.classList.add(cls)
   }
 
-  // Aplica animacao no emoji
+  // Aplica imagem real de fundo
+  if (bgImage) {
+    const url = BACKGROUND_IMAGES[effect]
+    if (url) {
+      bgImage.style.backgroundImage = `url('${url}')`
+    } else {
+      bgImage.style.backgroundImage = ''
+    }
+  }
+
+  // Aplica animacao no emoji com efeitos mais ricos
   if (emojiEl) {
     emojiEl.style.animation = ''
+    emojiEl.style.filter = ''
     void emojiEl.offsetWidth // force reflow
-    if (effect === 'clear-day')       emojiEl.style.animation = 'wx-spin 20s linear infinite'
-    else if (effect === 'rain' || effect === 'drizzle') emojiEl.style.animation = 'wx-shake 1.2s ease-in-out infinite'
-    else if (effect === 'storm')      emojiEl.style.animation = 'wx-flash 1.8s ease-in-out infinite'
-    else if (effect === 'snow')       emojiEl.style.animation = 'wx-float 3s ease-in-out infinite'
-    else if (effect === 'fog')        emojiEl.style.animation = 'wx-pulse-opacity 3s ease-in-out infinite'
-    else if (effect === 'cloudy')     emojiEl.style.animation = 'wx-sway 4s ease-in-out infinite'
+
+    if (effect === 'clear-day') {
+      emojiEl.style.animation = 'wx-spin 20s linear infinite, wx-spin-glow 4s ease-in-out infinite'
+    } else if (effect === 'clear-night') {
+      emojiEl.style.animation = 'wx-clear-night 4s ease-in-out infinite'
+    } else if (effect === 'rain') {
+      emojiEl.style.animation = 'wx-shake 1s ease-in-out infinite'
+    } else if (effect === 'drizzle') {
+      emojiEl.style.animation = 'wx-shake 1.8s ease-in-out infinite'
+    } else if (effect === 'storm') {
+      emojiEl.style.animation = 'wx-flash 1.4s ease-in-out infinite'
+    } else if (effect === 'snow') {
+      emojiEl.style.animation = 'wx-snow-drift 4s ease-in-out infinite, wx-float 3s ease-in-out infinite'
+    } else if (effect === 'fog') {
+      emojiEl.style.animation = 'wx-pulse-opacity 3.5s ease-in-out infinite'
+    } else if (effect === 'cloudy') {
+      emojiEl.style.animation = 'wx-sway 5s ease-in-out infinite'
+    }
   }
 
   if (!canvas) return
@@ -294,25 +330,49 @@ function startSunRays(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D):
 
 // ── Rain / Storm ──────────────────────────────────────────────
 function startRain(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, type: WeatherEffect): void {
-  const count = type === 'drizzle' ? 60 : type === 'storm' ? 180 : 120
-  const angleX = type === 'storm' ? 3 : 1
+  const count = type === 'drizzle' ? 50 : type === 'storm' ? 220 : 130
+  const angleX = type === 'storm' ? 3.5 : 0.8
   const drops = Array.from({ length: count }, () => ({
     x: Math.random() * 1200,
     y: Math.random() * 900,
-    speed: 8 + Math.random() * 10,
-    len:   12 + Math.random() * 16,
-    alpha: 0.2 + Math.random() * 0.3,
+    speed: type === 'drizzle' ? 4 + Math.random() * 4 : 10 + Math.random() * 12,
+    len:   type === 'drizzle' ? 6 + Math.random() * 8 : 14 + Math.random() * 18,
+    alpha: type === 'drizzle' ? 0.12 + Math.random() * 0.15 : 0.2 + Math.random() * 0.35,
+    width: type === 'drizzle' ? 0.5 : 0.8 + Math.random() * 0.6,
   }))
+
+  let lightningTimer = 0
+  let lightningAlpha = 0
+
   const draw = () => {
     const w = canvas.offsetWidth, h = canvas.offsetHeight
     if (canvas.width !== w) { canvas.width = w; canvas.height = h }
     ctx.clearRect(0, 0, w, h)
+
+    // Lightning flash for storms
+    if (type === 'storm') {
+      lightningTimer++
+      if (lightningTimer > 180 + Math.random() * 240) {
+        lightningTimer = 0
+        lightningAlpha = 0.15 + Math.random() * 0.25
+      }
+      if (lightningAlpha > 0) {
+        ctx.fillStyle = `rgba(180, 200, 255, ${lightningAlpha})`
+        ctx.fillRect(0, 0, w, h)
+        lightningAlpha = Math.max(0, lightningAlpha - 0.03)
+      }
+    }
+
     drops.forEach(d => {
       ctx.beginPath()
       ctx.moveTo(d.x, d.y)
       ctx.lineTo(d.x + angleX * 2, d.y + d.len)
-      ctx.strokeStyle = `rgba(160, 200, 255, ${d.alpha})`
-      ctx.lineWidth   = type === 'drizzle' ? 0.8 : 1.2
+      const grad = ctx.createLinearGradient(d.x, d.y, d.x + angleX * 2, d.y + d.len)
+      grad.addColorStop(0, `rgba(180, 210, 255, 0)`)
+      grad.addColorStop(0.3, `rgba(180, 210, 255, ${d.alpha})`)
+      grad.addColorStop(1, `rgba(140, 190, 255, ${d.alpha * 0.6})`)
+      ctx.strokeStyle = grad
+      ctx.lineWidth   = d.width
       ctx.stroke()
       d.y += d.speed
       d.x += angleX

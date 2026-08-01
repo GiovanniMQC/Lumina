@@ -30,7 +30,21 @@ function wakeUp(): void {
   if (!s.amoledMode) return
   
   if (document.body.classList.contains('amoled-active')) {
-    document.body.classList.remove('amoled-active')
+    // Desativa a transição de posição do relógio ANTES de remover a classe
+    // para evitar o flash de "relógio voando" pelo canto
+    const clock = document.getElementById('clock-widget')
+    if (clock) {
+      clock.style.transition = 'none'
+      document.body.classList.remove('amoled-active')
+      // Re-habilita a transição no próximo frame, depois do repositionamento
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          clock.style.transition = ''
+        })
+      })
+    } else {
+      document.body.classList.remove('amoled-active')
+    }
   }
   if (document.body.classList.contains('amoled-pitch-black')) {
     document.body.classList.remove('amoled-pitch-black')
@@ -61,8 +75,8 @@ function checkAmoledState(): void {
       navigateTo(0, false) // Força voltar para a página do player onde está o relógio
     }
     
-    // Entre meia-noite (00:00) e 5 da manhã (05:00), ativa modo breu total
-    if (isPitchBlackTime()) {
+    // Ativa modo breu total de acordo com as configurações do usuário
+    if (s.pitchBlackMode && isNightTime(s.pitchBlackStartTime, s.pitchBlackEndTime)) {
       document.body.classList.add('amoled-pitch-black')
     } else {
       document.body.classList.remove('amoled-pitch-black')
@@ -71,14 +85,6 @@ function checkAmoledState(): void {
     document.body.classList.remove('amoled-active')
     document.body.classList.remove('amoled-pitch-black')
   }
-}
-
-function isPitchBlackTime(): boolean {
-  const now = new Date()
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const startTotal = 0 // 00:00
-  const endTotal = 5 * 60 // 05:00
-  return currentMinutes >= startTotal && currentMinutes <= endTotal
 }
 
 function isNightTime(startStr: string, endStr: string): boolean {

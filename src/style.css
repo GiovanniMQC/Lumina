@@ -722,34 +722,60 @@ html, body {
 
 /* ── Weather Emoji Animations ─────────────────────────────── */
 @keyframes wx-spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  from { transform: rotate(0deg) scale(1); }
+  50%  { transform: rotate(180deg) scale(1.1); }
+  to   { transform: rotate(360deg) scale(1); }
+}
+@keyframes wx-spin-glow {
+  0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 200, 80, 0.4)) drop-shadow(0 0 20px rgba(255, 160, 0, 0.3)); }
+  50%       { filter: drop-shadow(0 0 20px rgba(255, 220, 80, 0.8)) drop-shadow(0 0 40px rgba(255, 180, 0, 0.5)); }
 }
 @keyframes wx-shake {
   0%, 100% { transform: translateX(0) rotate(0deg); }
-  20%       { transform: translateX(-4px) rotate(-4deg); }
-  40%       { transform: translateX(4px)  rotate(4deg); }
-  60%       { transform: translateX(-3px) rotate(-2deg); }
-  80%       { transform: translateX(3px)  rotate(2deg); }
+  15%       { transform: translateX(-5px) rotate(-5deg); }
+  30%       { transform: translateX(5px)  rotate(5deg); }
+  45%       { transform: translateX(-3px) rotate(-3deg); }
+  60%       { transform: translateX(3px)  rotate(3deg); }
+  75%       { transform: translateX(-2px) rotate(-1deg); }
+}
+@keyframes wx-rain-drop {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  80%  { transform: translateY(8px) rotate(5deg); opacity: 1; }
+  100% { transform: translateY(12px) rotate(8deg); opacity: 0.7; }
 }
 @keyframes wx-flash {
-  0%, 100% { opacity: 1;   transform: scale(1); filter: brightness(1); }
-  45%       { opacity: 0.7; transform: scale(0.95); filter: brightness(0.8); }
-  50%       { opacity: 1;   transform: scale(1.15); filter: brightness(1.8) drop-shadow(0 0 12px #fff); }
-  55%       { opacity: 0.8; transform: scale(1); filter: brightness(1); }
+  0%, 100% { opacity: 1;   transform: scale(1);    filter: brightness(1); }
+  30%       { opacity: 0.6; transform: scale(0.92);  filter: brightness(0.7) hue-rotate(-10deg); }
+  48%       { opacity: 0.8; transform: scale(0.98);  filter: brightness(0.9); }
+  50%       { opacity: 1;   transform: scale(1.2);   filter: brightness(2.5) drop-shadow(0 0 20px #ffffff) drop-shadow(0 0 40px #a0c0ff); }
+  52%       { opacity: 0.9; transform: scale(1.05);  filter: brightness(1.2); }
+  70%       { opacity: 1;   transform: scale(1);     filter: brightness(1); }
 }
 @keyframes wx-float {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50%       { transform: translateY(-10px) rotate(2deg); }
+  0%   { transform: translateY(0)    rotate(-3deg) scale(1); }
+  25%  { transform: translateY(-8px) rotate(1deg)  scale(1.05); }
+  50%  { transform: translateY(-14px) rotate(3deg) scale(1.08); }
+  75%  { transform: translateY(-6px) rotate(0deg)  scale(1.03); }
+  100% { transform: translateY(0)    rotate(-3deg) scale(1); }
+}
+@keyframes wx-snow-drift {
+  0%, 100% { transform: translateX(0)  translateY(0)   rotate(-2deg); }
+  33%       { transform: translateX(-6px) translateY(-4px) rotate(-5deg); }
+  66%       { transform: translateX(4px)  translateY(-6px) rotate(3deg); }
 }
 @keyframes wx-pulse-opacity {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50%       { opacity: 1;   transform: scale(1.05); }
+  0%, 100% { opacity: 0.4; transform: scale(1);    filter: blur(0px); }
+  50%       { opacity: 0.9; transform: scale(1.08); filter: blur(1px); }
 }
 @keyframes wx-sway {
-  0%, 100% { transform: translateX(0); }
-  33%       { transform: translateX(-6px); }
-  66%       { transform: translateX(6px); }
+  0%, 100% { transform: translateX(0)   rotate(0deg); }
+  25%       { transform: translateX(-8px) rotate(-4deg); }
+  50%       { transform: translateX(0)   rotate(0deg); }
+  75%       { transform: translateX(8px)  rotate(4deg); }
+}
+@keyframes wx-clear-night {
+  0%, 100% { transform: scale(1)    rotate(-5deg); filter: drop-shadow(0 0 8px rgba(180, 200, 255, 0.5)); }
+  50%       { transform: scale(1.06) rotate(5deg);  filter: drop-shadow(0 0 20px rgba(200, 220, 255, 0.9)); }
 }
 
 @keyframes track-enter {
@@ -1258,6 +1284,21 @@ body.no-karaoke .lyric-line.upcoming {
   position: relative; /* needed for absolute canvas */
 }
 
+#weather-bg-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: background-image 1.5s ease-in-out;
+  pointer-events: none;
+  z-index: 0;
+  background-color: #0a0a0a;
+  opacity: 1;
+  filter: blur(2px);
+}
+
 /* Canvas de partículas — cobre toda a página de clima */
 #weather-canvas {
   position: absolute;
@@ -1265,7 +1306,7 @@ body.no-karaoke .lyric-line.upcoming {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 /* Overlay de gradiente temático */
@@ -1273,14 +1314,15 @@ body.no-karaoke .lyric-line.upcoming {
   position: absolute;
   inset: 0;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
   transition: background 2s ease;
+  background-color: rgba(0, 0, 0, 0.4); /* Escurecimento fixo para sempre garantir leitura */
 }
 
 /* Garante que o conteúdo fique acima do canvas */
-#weather-page > *:not(#weather-canvas):not(#weather-bg-overlay) {
+#weather-page > *:not(#weather-canvas):not(#weather-bg-overlay):not(#weather-bg-image) {
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 /* ── Gradientes por condição ──────────────────────────────── */
@@ -1687,10 +1729,15 @@ body.no-karaoke .lyric-line.upcoming {
 }
 
 /* ── MODO AMOLED (TELA PRETA À NOITE) ────────────────────────── */
+body {
+  transition: background-color 2s ease;
+}
+
 body.amoled-active {
   background-color: #000 !important;
 }
 
+/* Transição de entrada no AMOLED (só aplica quando amoled-active está por sair) */
 body.amoled-active #bg-layer,
 body.amoled-active .slideshow-img,
 body.amoled-active .slideshow-vignette,
@@ -1702,14 +1749,16 @@ body.amoled-active #bottom-controls,
 body.amoled-active #nav-dots,
 body.amoled-active #fullscreen-btn {
   opacity: 0 !important;
-  visibility: hidden !important;
   pointer-events: none !important;
+  transition: opacity 2s ease !important;
 }
+
+/* Nota: ao sair do AMOLED, os elementos voltam normalmente com opacity voltando a 1 */
 
 body.amoled-pitch-black #clock-widget {
   opacity: 0 !important;
-  visibility: hidden !important;
   pointer-events: none !important;
+  transition: opacity 2s ease !important;
 }
 
 body.amoled-active #clock-widget {
@@ -1720,6 +1769,7 @@ body.amoled-active #clock-widget {
   animation: amoled-float 60s ease-in-out infinite alternate !important;
   pointer-events: auto !important;
   z-index: 9999 !important;
+  transition: top 2s ease, right 2s ease, transform 2s ease, opacity 2s ease !important;
 }
 
 body.amoled-active #clock-widget:hover {
