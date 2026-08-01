@@ -121,30 +121,67 @@ export async function getCurrentlyPlaying(): Promise<CurrentlyPlaying | null> {
 
 export type PlaybackHandler = (state: CurrentlyPlaying | null) => void
 
-let _pollTimer: ReturnType<typeof setInterval> | null = null
+let _pollTimer: ReturnType<typeof setTimeout> | null = null
+let _triggerPoll: (() => void) | null = null
+let _isActive = false
+let _currentIntervalMs = 10000
+const MAX_INTERVAL_MS = 60000 // Máximo de 1 minuto
+const IDLE_MULTIPLIER = 1.5 // Aumenta 50% o tempo a cada checagem vazia
 
 export function startPolling(
   handler: PlaybackHandler,
-  intervalMs: number = 4000
+  baseIntervalMs: number = 10000
 ): void {
   stopPolling()
+  
+  _isActive = true
+  _currentIntervalMs = baseIntervalMs
 
   const poll = async () => {
+    if (!_isActive) return
+
     try {
       const state = await getCurrentlyPlaying()
       handler(state)
+      
+      // Ajusta o intervalo de polling
+      if (state && state.is_playing) {
+        _currentIntervalMs = baseIntervalMs // Volta ao normal se estiver tocando
+      } else {
+        // Aumenta progressivamente até o limite se não estiver tocando
+        _currentIntervalMs = Math.min(Math.floor(_currentIntervalMs * IDLE_MULTIPLIER), MAX_INTERVAL_MS)
+      }
     } catch (err) {
       console.error('[spotify] Polling error:', err)
     }
+
+    if (_isActive) {
+      _pollTimer = setTimeout(poll, _currentIntervalMs)
+    }
+  }
+
+  // Permite forçar externamente
+  _triggerPoll = () => {
+    if (Date.now() < _rateLimitedUntil) return
+    clearTimeout(_pollTimer!)
+    poll()
   }
 
   poll() // chamada imediata
-  _pollTimer = setInterval(poll, intervalMs)
+}
+
+export function forcePoll(): void {
+  if (_triggerPoll) _triggerPoll()
+}
+
+export function isRateLimited(): boolean {
+  return Date.now() < _rateLimitedUntil
 }
 
 export function stopPolling(): void {
+  _isActive = false
   if (_pollTimer !== null) {
-    clearInterval(_pollTimer)
+    clearTimeout(_pollTimer)
     _pollTimer = null
   }
 }

@@ -583,11 +583,8 @@ html, body {
   font-family: var(--font-body);
 }
 
-/* ── Idle Overlay ──────────────────────────────────────────── */
-.idle-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 50;
+/* ── Idle Page (Modo Foto) ────────────────────────────────── */
+#idle-page {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -595,9 +592,6 @@ html, body {
   gap: var(--space-xl);
   background:
     radial-gradient(ellipse 100% 70% at 50% 40%, rgba(29 185 84 / 0.04) 0%, transparent 70%);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity var(--transition-slow);
 }
 
 /* ── Slideshow Immich ──────────────────────────────────────── */
@@ -624,23 +618,32 @@ html, body {
   pointer-events: none;
 }
 
+/* Conteúdo principal do modo foto */
 .idle-content {
-  display: none !important;
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xl);
+  transition: opacity 0.5s ease;
 }
 
+#idle-page.playing .idle-content {
+  opacity: 0;
+  pointer-events: none;
+}
 
-.idle-overlay.active {
+#photo-now-playing {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+#idle-page.playing #photo-now-playing {
+  display: flex !important;
   opacity: 1;
   pointer-events: all;
-}
-
-/* Oculta apenas os itens musicais quando em idle (mantém idle-overlay e clock-widget visíveis) */
-#player-page.is-idle > #bg-image,
-#player-page.is-idle > #now-playing,
-#player-page.is-idle > #lyrics-container,
-#player-page.is-idle > #photo-mode-lyrics {
-  opacity: 0 !important;
-  pointer-events: none !important;
 }
 
 
@@ -896,77 +899,12 @@ html, body {
   color: #fff;
 }
 
-/* ── Modo Foto (Photo Mode) ───────────────────────────────── */
-body.photo-mode #swipe-container {
-  height: 100% !important;
-}
-
-body.photo-mode #lyrics-container {
-  display: none !important;
-}
-
-body.photo-mode #bg-layer {
-  opacity: 0 !important;
-  visibility: hidden !important;
-}
-
-body.photo-mode .idle-overlay {
-  opacity: 1 !important;
-  pointer-events: none !important; 
-  position: fixed !important;
-  inset: 0 !important;
-  z-index: 50 !important;
-}
-/* (Regras globais agora garantem que o clock-widget não some e a tela idle padrão não aparece) */
-/* Transforma o player em um widget menor no canto inferior esquerdo */
-body.photo-mode #now-playing {
-  position: absolute;
-  bottom: 80px; /* Acima dos botões inferiores */
-  left: var(--space-xl);
-  z-index: 100;
-  /* Fundo escurecido sem blur (melhor para performance e evita travamentos na transição) */
-  background: rgba(0, 0, 0, 0.75);
-  padding: var(--space-md);
-  border-radius: var(--radius-lg);
-  max-width: 400px;
-  align-items: center;
-  gap: var(--space-md);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-
-body.photo-mode #album-art {
-  width: 90px;
-  height: 90px;
-  cursor: pointer;
-}
-
-body.photo-mode #album-art:hover {
-  transform: scale(1.08);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 8px 20px rgba(0,0,0,0.5);
-}
-
-body.photo-mode #album-art-glow {
-  display: none;
-}
-
-body.photo-mode #track-title {
-  font-size: 1.4rem;
-}
-
-body.photo-mode #track-artist {
-  font-size: 1rem;
-}
-
-body.photo-mode .slideshow-img.visible {
-  opacity: 1.0; /* Fotos 100% visíveis, já que a hora e o player estão por cima com sombras/fundos */
-}
-
 /* ── Letra em destaque no Modo Foto (Canto Inferior Direito) ── */
 #photo-mode-lyrics {
-  display: none; /* Só aparece no modo foto */
+  display: none; /* Só aparece quando tocando */
 }
 
-body.photo-mode:not(.no-photo-lyrics) #photo-mode-lyrics {
+#idle-page.playing:not(.no-photo-lyrics) #photo-mode-lyrics {
   display: block;
   position: absolute;
   bottom: var(--space-xl);
@@ -983,6 +921,10 @@ body.photo-mode:not(.no-photo-lyrics) #photo-mode-lyrics {
   /* Truncate longo (mas pode quebrar linha, vamos deixar flexível) */
   word-wrap: break-word;
   animation: fadeIn 0.4s ease-out;
+}
+
+#idle-page.playing .slideshow-img.visible {
+  opacity: 1.0; /* Fotos 100% visíveis, já que a hora e o player estão por cima com sombras/fundos */
 }
 
 #settings-overlay {

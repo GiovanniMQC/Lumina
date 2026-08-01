@@ -37,7 +37,6 @@ import {
 import {
   renderLyrics,
   showScreen,
-  setPlayerIdle,
   syncKaraokeHighlight,
   syncPlainLyrics,
   updateProgress,
@@ -112,18 +111,30 @@ async function loadLyrics(state: CurrentlyPlaying): Promise<void> {
 
 // ── Playback Handler ──────────────────────────────────────────
 
+import { navigateTo } from './navigation'
+import { isRateLimited, forcePoll } from './spotify'
+
 async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
 
+  // Atualiza UI de erro de API
+  const apiErrorEl = document.getElementById('api-error-message')
+  if (apiErrorEl) {
+    apiErrorEl.style.display = isRateLimited() ? 'block' : 'none'
+  }
 
-  // Nada tocando → idle overlay
+  // Nada tocando → modo idle
   if (!state || !state.item || !state.is_playing) {
+    document.getElementById('idle-page')?.classList.remove('playing')
     stopAnimationLoop()
-    showScreen('player-screen')
-    setPlayerIdle(true)
-    _isIdle = true
-    startSlideshow()
+    if (!_isIdle) {
+      _isIdle = true
+      // Desliza automaticamente para a tela do meio (Fotos) quando parar de tocar
+      navigateTo(1, true)
+    }
     return
   }
+
+  document.getElementById('idle-page')?.classList.add('playing')
 
   // Nova faixa detectada
   const isNewTrack = state.item.id !== _lastTrackId
@@ -139,12 +150,12 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
 
   setPlaybackState(state.progress_ms, state.is_playing, state.item.duration_ms)
 
-  _isIdle = false
-  if (!_photoMode) {
-    stopSlideshow()
+  if (_isIdle) {
+    _isIdle = false
+    // Desliza automaticamente para a tela da esquerda (Mídia) quando começar a tocar
+    navigateTo(0, true)
   }
-  showScreen('player-screen')
-  setPlayerIdle(false)
+
   startAnimationLoop(state)
 }
 
@@ -207,24 +218,16 @@ async function bootstrap(): Promise<void> {
   // Pré-carrega metadados do Immich
   loadImmichAssets()
 
-  // Clicar na capa do álbum entra no Modo Foto
+  // Clicar na capa do álbum entra na tela de Fotos
   const albumArt = document.getElementById('album-art')
   albumArt?.addEventListener('click', () => {
-    _photoMode = !_photoMode
+    navigateTo(1)
+  })
 
-    const updateDOM = () => {
-      document.body.classList.toggle('photo-mode', _photoMode)
-      if (!_isIdle) {
-        if (_photoMode) startSlideshow()
-        else stopSlideshow()
-      }
-    }
-
-    if (document.startViewTransition) {
-      document.startViewTransition(updateDOM)
-    } else {
-      updateDOM()
-    }
+  // Clicar na capa compacta na tela de fotos volta para Letras
+  const photoAlbumArt = document.getElementById('photo-album-art')
+  photoAlbumArt?.addEventListener('click', () => {
+    navigateTo(0)
   })
 
   // Clicar no relógio dá zoom nele
@@ -280,20 +283,37 @@ async function bootstrap(): Promise<void> {
     initSpotify(_tokens.accessToken, ensureFreshToken)
   }
 
-  // Inicia navegação swipe (2 páginas: player + clima)
-  initNavigation('swipe-container', '.nav-dot', 2)
+  // Inicia navegação swipe (3 páginas: Mídia, Fotos, Clima)
+  initNavigation('swipe-container', '.nav-dot', 3, (page) => {
+    if (page === 0) {
+      // Se entrar na aba de mídia, força uma atualização para pegar status na hora,
+      // desde que não estejamos em cooldown de erro da API.
+      forcePoll()
+    }
+    
+    // O slideshow deve tocar apenas na página do meio (1)
+    if (page === 1) {
+      startSlideshow()
+    } else {
+      stopSlideshow()
+    }
+  })
 
   // Carrega clima em background (não bloqueia)
   initWeather().catch(err => console.warn('[weather] Init error:', err))
 
   showScreen('player-screen')
-  setPlayerIdle(true)
   
   if (hasSpotify) {
     startPolling(handlePlayback, 10000)
+    // Se não estiver tocando inicialmente, vai dar navigateTo(1) lá no handlePlayback
   } else {
-    // Modo sem Spotify logado: mostra a tela idle com relógio, clima e slideshow
+    // Modo sem Spotify logado: mostra a tela idle e vai pra página 1
+    _isIdle = true
     startSlideshow()
+    setTimeout(() => {
+      navigateTo(1, false) // Começa no modo fotos sem animação
+    }, 50)
   }
 }
 

@@ -20,22 +20,9 @@ export function showScreen(id: ScreenId): void {
   document.querySelectorAll<HTMLElement>('.screen').forEach(el => {
     el.classList.remove('active')
   })
-
   document.getElementById(id)?.classList.add('active')
 }
 
-export function setPlayerIdle(isIdle: boolean): void {
-  const playerPage = document.getElementById('player-page')
-  const idleOverlay = document.getElementById('idle-overlay')
-  
-  if (isIdle) {
-    playerPage?.classList.add('is-idle')
-    idleOverlay?.classList.add('active')
-  } else {
-    playerPage?.classList.remove('is-idle')
-    idleOverlay?.classList.remove('active')
-  }
-}
 
 // ── Background ────────────────────────────────────────────────
 
@@ -110,16 +97,30 @@ export function updateTrackInfo(state: CurrentlyPlaying): boolean {
     _lastTrackId = track.id
 
     const albumArt = document.getElementById('album-art') as HTMLImageElement
-    albumArt.classList.add('changing')
+    const photoAlbumArt = document.getElementById('photo-album-art') as HTMLImageElement
+
+    if (albumArt) albumArt.classList.add('changing')
+    if (photoAlbumArt) photoAlbumArt.classList.add('changing')
 
     setTimeout(() => {
       const imageUrl = getBestImage(track.album.images)
-      albumArt.src = imageUrl
-      albumArt.classList.remove('changing')
-      albumArt.classList.add('track-entering')
-      albumArt.addEventListener('animationend', () => {
-        albumArt.classList.remove('track-entering')
-      }, { once: true })
+      if (albumArt) {
+        albumArt.src = imageUrl
+        albumArt.classList.remove('changing')
+        albumArt.classList.add('track-entering')
+        albumArt.addEventListener('animationend', () => {
+          albumArt.classList.remove('track-entering')
+        }, { once: true })
+      }
+      
+      if (photoAlbumArt) {
+        photoAlbumArt.src = imageUrl
+        photoAlbumArt.classList.remove('changing')
+        photoAlbumArt.classList.add('track-entering')
+        photoAlbumArt.addEventListener('animationend', () => {
+          photoAlbumArt.classList.remove('track-entering')
+        }, { once: true })
+      }
 
       setBackground(imageUrl)
       extractAccentColor(imageUrl)
@@ -128,9 +129,13 @@ export function updateTrackInfo(state: CurrentlyPlaying): boolean {
 
   const titleEl  = document.getElementById('track-title')
   const artistEl = document.getElementById('track-artist')
+  const photoTitleEl  = document.getElementById('photo-track-title')
+  const photoArtistEl = document.getElementById('photo-track-artist')
 
   if (titleEl)  titleEl.textContent  = track.name
   if (artistEl) artistEl.textContent = track.artists.map(a => a.name).join(', ')
+  if (photoTitleEl)  photoTitleEl.textContent  = track.name
+  if (photoArtistEl) photoArtistEl.textContent = track.artists.map(a => a.name).join(', ')
 
   return isNewTrack
 }
