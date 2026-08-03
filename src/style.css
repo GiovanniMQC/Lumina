@@ -1112,20 +1112,18 @@ body.idle-clock-top-right #idle-clock.clock-zoomed {
 }
 
 
-#bottom-controls {
-  position: fixed;
-  bottom: var(--space-xl);
-  left: 50%;
-  transform: translateX(-50%);
+#top-controls {
+  position: absolute;
+  top: var(--space-xl);
+  left: var(--space-xl);
   z-index: 1000;
   display: flex;
   gap: var(--space-md);
-  opacity: 0;
+  opacity: 0.15;
   transition: all var(--transition-fast);
 }
 
-#nav-dots:hover~#bottom-controls,
-#bottom-controls:hover {
+#top-controls:hover {
   opacity: 1;
 }
 
@@ -1485,8 +1483,13 @@ body.no-karaoke .lyric-line.upcoming {
   padding: var(--space-xl);
   gap: var(--space-lg);
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   position: relative;
   /* needed for absolute canvas */
+}
+#weather-page::-webkit-scrollbar {
+  display: none;
 }
 
 #weather-bg-wrap {
@@ -1576,16 +1579,17 @@ body.no-karaoke .lyric-line.upcoming {
 
 #weather-clock-time {
   font-family: var(--font-mono);
-  font-size: clamp(2rem, 4vw, 3.5rem);
+  font-size: clamp(2.5rem, 5vw, 4rem);
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--clr-text);
   line-height: 1;
-  text-shadow: 0 0 40px rgba(255 255 255 / 0.15);
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.8), 0 0 40px rgba(0, 0, 0, 0.8);
 }
 
 #weather-clock-date {
-  font-size: clamp(0.7rem, 1.3vw, 0.9rem);
+  font-family: var(--font-body);
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
   font-weight: 400;
   color: var(--clr-text-muted);
   letter-spacing: 0.05em;
@@ -1594,12 +1598,21 @@ body.no-karaoke .lyric-line.upcoming {
 }
 
 #weather-content {
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
   gap: var(--space-md);
-  padding-top: calc(var(--space-2xl) + 8px);
-  padding-bottom: var(--space-xl);
-  min-height: 100%;
+  padding-top: 0;
+  padding-bottom: var(--space-md);
+  flex: 1;
+  min-height: min-content;
+}
+
+@media (max-height: 700px) {
+  #weather-content {
+    justify-content: flex-start;
+    padding-bottom: 60px; /* Space for nav-dots */
+  }
 }
 
 #weather-header {
@@ -1712,10 +1725,9 @@ body.no-karaoke .lyric-line.upcoming {
   overflow-x: auto;
   overflow-y: hidden;
   flex-shrink: 0;
-  /* tira o padding lateral para a barra ir de ponta a ponta */
-  margin: 0 calc(-1 * var(--space-xl));
-  padding: 0 var(--space-xl) var(--space-md);
-  /* momentum scroll no iOS */
+  margin-left: calc(-1 * var(--space-xl));
+  margin-right: calc(-1 * var(--space-xl));
+  padding: 12px var(--space-xl) var(--space-md); /* 12px top padding prevents glow/scale clipping */
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   /* esconde a scrollbar mas permite rolar */
@@ -1752,23 +1764,74 @@ body.no-karaoke .lyric-line.upcoming {
   background: rgba(255 255 255 / 0.09);
 }
 
+.hourly-item.current-hour {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+  transform: scale(1.05);
+  z-index: 2;
+}
+
 .hourly-time {
   font-family: var(--font-mono);
   font-size: 0.7rem;
-  color: var(--clr-text-faint);
-  letter-spacing: 0.05em;
+  color: var(--clr-text-muted);
 }
 
 .hourly-emoji {
-  font-size: 1.5rem;
+  font-size: 1.6rem;
   line-height: 1;
 }
 
 .hourly-temp {
   font-family: var(--font-display);
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: var(--clr-text);
+}
+
+/* ── Gaveta Deslizante (Bottom Sheet) ── */
+#weather-drawer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(20, 20, 20, 0.4);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  padding: var(--space-md) var(--space-xl) var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  transform: translateY(calc(100% - 48px)); /* 48px is the handle + title height */
+  transition: transform var(--transition-spring);
+  z-index: 10;
+  cursor: pointer;
+}
+
+#weather-drawer.open {
+  transform: translateY(0);
+  cursor: default;
+}
+
+#weather-drawer-handle {
+  width: 40px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  margin: 0 auto;
+}
+
+.weather-drawer-title {
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--clr-text-faint);
+  margin-top: -4px;
 }
 
 /* ===================================================================
@@ -1920,23 +1983,76 @@ body.no-karaoke .lyric-line.upcoming {
     grid-row: 1;
   }
 
+}
+
+/* --- Mobile Landscape / Telas muito baixas --- */
+@media (max-height: 500px) {
   #weather-page {
-    padding-top: var(--space-2xl);
-    padding-bottom: 60px;
+    padding-top: var(--space-md);
+    padding-bottom: var(--space-md);
+    gap: var(--space-sm);
   }
-
   #weather-content {
-    grid-template-rows: auto auto 1fr auto;
-    padding-top: var(--space-2xl);
+    gap: var(--space-sm);
+    justify-content: flex-start;
+  }
+  #weather-emoji {
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
+  }
+  #weather-temp-display {
+    font-size: clamp(3rem, 12vw, 4rem);
+    line-height: 1;
+  }
+  #weather-main {
+    gap: var(--space-md);
+  }
+  #weather-location-name {
+    font-size: 1.1rem;
+  }
+  .weather-stat-card {
+    padding: var(--space-sm) var(--space-md);
+  }
+  .stat-value {
+    font-size: 1.1rem;
+  }
+}
+
+/* --- Phone (telas pequenas verticais) --- */
+@media (max-width: 600px) {
+  /* Zera o top padding do content para subir ao nível do relógio */
+  #weather-content {
+    padding-top: 0;
+    gap: var(--space-md);
+    justify-content: flex-start; /* Evita que o space-evenly esmague ou vaze a tela no celular */
+    padding-bottom: 60px; /* Espaço para os nav-dots não cobrirem os itens no scroll */
   }
 
-  #weather-main {
-    flex-direction: row;
-    align-items: center;
+  /* Reduz os elementos massivos */
+  #weather-emoji {
+    font-size: clamp(3rem, 15vw, 4rem);
+  }
+  #weather-temp-display {
+    font-size: clamp(3.5rem, 16vw, 4.5rem);
+  }
+
+  #weather-page {
+    padding-top: var(--space-md);
+    padding-left: var(--space-md);
+    padding-right: var(--space-md);
   }
 
   #weather-stats {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
+  }
+  #weather-page::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Sobe os relógios para alinhar com o novo padding do topo */
+  #weather-clock-widget,
+  body.idle-clock-top-right #idle-clock {
+    top: var(--space-md);
+    right: var(--space-md);
   }
 }
 
@@ -1969,7 +2085,7 @@ body.amoled-active .idle-overlay,
 body.amoled-active #now-playing,
 body.amoled-active #lyrics-container,
 body.amoled-active #photo-mode-lyrics,
-body.amoled-active #bottom-controls,
+body.amoled-active #top-controls,
 body.amoled-active #nav-dots,
 body.amoled-active #fullscreen-btn,
 body.amoled-active #media-idle-message {

@@ -103,6 +103,7 @@ interface WeatherData {
     time:        string   // "HH:MM"
     temp:        number
     weatherCode: number
+    isCurrent:   boolean
   }>
 }
 
@@ -143,12 +144,11 @@ async function fetchWeatherData(lat: number, lon: number): Promise<WeatherData> 
       temp:        Math.round(hourlyTemps[i]),
       weatherCode: hourlyCodes[i],
     }))
-    .filter(h => h.time >= currentHour)
-    .slice(0, 12)
     .map(h => ({
       time:        `${String(h.time).padStart(2, '0')}:00`,
       temp:        h.temp,
       weatherCode: h.weatherCode,
+      isCurrent:   h.time === currentHour
     }))
 
   return {
@@ -343,16 +343,20 @@ function startSunRays(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D):
 
 // ── Rain / Storm ──────────────────────────────────────────────
 function startRain(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, type: WeatherEffect): void {
-  const count = type === 'drizzle' ? 50 : type === 'storm' ? 220 : 130
+  const count = type === 'drizzle' ? 80 : type === 'storm' ? 300 : 180
   const angleX = type === 'storm' ? 3.5 : 0.8
-  const drops = Array.from({ length: count }, () => ({
-    x: Math.random() * 1200,
-    y: Math.random() * 900,
-    speed: type === 'drizzle' ? 4 + Math.random() * 4 : 10 + Math.random() * 12,
-    len:   type === 'drizzle' ? 6 + Math.random() * 8 : 14 + Math.random() * 18,
-    alpha: type === 'drizzle' ? 0.12 + Math.random() * 0.15 : 0.2 + Math.random() * 0.35,
-    width: type === 'drizzle' ? 0.5 : 0.8 + Math.random() * 0.6,
-  }))
+  const drops = Array.from({ length: count }, () => {
+    const z = Math.random() // Profundidade: 0 (fundo) a 1 (frente)
+    return {
+      x: Math.random() * 2000 - 500,
+      y: Math.random() * 1200 - 200,
+      z,
+      speed: (type === 'drizzle' ? 4 + Math.random() * 4 : 10 + Math.random() * 12) * (z * 0.8 + 0.2),
+      len:   (type === 'drizzle' ? 6 + Math.random() * 8 : 14 + Math.random() * 18) * (z * 0.8 + 0.2),
+      alpha: (type === 'drizzle' ? 0.12 + Math.random() * 0.15 : 0.2 + Math.random() * 0.35) * z,
+      width: (type === 'drizzle' ? 0.5 : 0.8 + Math.random() * 0.6) * z,
+    }
+  })
 
   let lightningTimer = 0
   let lightningAlpha = 0
@@ -367,12 +371,12 @@ function startRain(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, typ
       lightningTimer++
       if (lightningTimer > 180 + Math.random() * 240) {
         lightningTimer = 0
-        lightningAlpha = 0.15 + Math.random() * 0.25
+        lightningAlpha = 0.2 + Math.random() * 0.3
       }
       if (lightningAlpha > 0) {
         ctx.fillStyle = `rgba(180, 200, 255, ${lightningAlpha})`
         ctx.fillRect(0, 0, w, h)
-        lightningAlpha = Math.max(0, lightningAlpha - 0.03)
+        lightningAlpha = Math.max(0, lightningAlpha - 0.04)
       }
     }
 
@@ -383,13 +387,17 @@ function startRain(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, typ
       const grad = ctx.createLinearGradient(d.x, d.y, d.x + angleX * 2, d.y + d.len)
       grad.addColorStop(0, `rgba(180, 210, 255, 0)`)
       grad.addColorStop(0.3, `rgba(180, 210, 255, ${d.alpha})`)
-      grad.addColorStop(1, `rgba(140, 190, 255, ${d.alpha * 0.6})`)
+      grad.addColorStop(1, `rgba(180, 210, 255, 0)`)
       ctx.strokeStyle = grad
-      ctx.lineWidth   = d.width
+      ctx.lineWidth = d.width
       ctx.stroke()
+      
+      d.x += angleX * (d.z * 0.8 + 0.2)
       d.y += d.speed
-      d.x += angleX
-      if (d.y > h) { d.y = -20; d.x = Math.random() * w }
+      if (d.y > h + 100) {
+        d.y = -50
+        d.x = Math.random() * (w + 400) - 200
+      }
     })
     _animRaf = requestAnimationFrame(draw)
   }
@@ -398,15 +406,19 @@ function startRain(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D, typ
 
 // ── Snow ──────────────────────────────────────────────────────
 function startSnow(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
-  const flakes = Array.from({ length: 80 }, () => ({
-    x:     Math.random() * 1200,
-    y:     Math.random() * 900,
-    r:     1.5 + Math.random() * 3,
-    speed: 0.5 + Math.random() * 1.5,
-    drift: (Math.random() - 0.5) * 0.5,
-    alpha: 0.4 + Math.random() * 0.4,
-    t:     Math.random() * Math.PI * 2,
-  }))
+  const flakes = Array.from({ length: 150 }, () => {
+    const z = Math.random()
+    return {
+      x:     Math.random() * 2000 - 500,
+      y:     Math.random() * 1200 - 200,
+      z,
+      r:     (1.5 + Math.random() * 3) * (z * 0.8 + 0.2),
+      speed: (0.5 + Math.random() * 1.5) * (z * 0.8 + 0.2),
+      drift: (Math.random() - 0.5) * 0.5 * (z * 0.8 + 0.2),
+      alpha: (0.4 + Math.random() * 0.5) * z,
+      t:     Math.random() * Math.PI * 2,
+    }
+  })
   const draw = () => {
     const w = canvas.offsetWidth, h = canvas.offsetHeight
     if (canvas.width !== w) { canvas.width = w; canvas.height = h }
@@ -417,9 +429,9 @@ function startSnow(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): vo
       f.y += f.speed
       ctx.beginPath()
       ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(220, 235, 255, ${f.alpha})`
+      ctx.fillStyle = `rgba(255, 255, 255, ${f.alpha})`
       ctx.fill()
-      if (f.y > h) { f.y = -10; f.x = Math.random() * w }
+      if (f.y > h + 20) { f.y = -20; f.x = Math.random() * (w + 400) - 200 }
     })
     _animRaf = requestAnimationFrame(draw)
   }
@@ -428,11 +440,11 @@ function startSnow(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): vo
 
 // ── Fog ───────────────────────────────────────────────────────
 function startFog(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): void {
-  const layers = Array.from({ length: 5 }, (_, i) => ({
-    y:     80 + i * 60,
-    speed: 0.2 + i * 0.1,
-    alpha: 0.04 + i * 0.015,
-    offset: 0,
+  const layers = Array.from({ length: 8 }, (_, i) => ({
+    y:     50 + i * 80,
+    speed: 0.1 + (i % 3) * 0.1,
+    alpha: 0.05 + i * 0.02,
+    offset: Math.random() * 1000,
   }))
   const draw = () => {
     const w = canvas.offsetWidth, h = canvas.offsetHeight
@@ -440,12 +452,12 @@ function startFog(canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D): voi
     ctx.clearRect(0, 0, w, h)
     layers.forEach(l => {
       l.offset = (l.offset + l.speed) % (w * 2)
-      const grd = ctx.createLinearGradient(0, l.y - 30, 0, l.y + 30)
+      const grd = ctx.createLinearGradient(0, l.y - 60, 0, l.y + 60)
       grd.addColorStop(0,   `rgba(180,190,210,0)`)
       grd.addColorStop(0.5, `rgba(180,190,210,${l.alpha})`)
       grd.addColorStop(1,   `rgba(180,190,210,0)`)
       ctx.fillStyle = grd
-      ctx.fillRect(-(w) + l.offset, l.y - 30, w * 2, 60)
+      ctx.fillRect(-(w) + l.offset, l.y - 60, w * 2, 120)
     })
     _animRaf = requestAnimationFrame(draw)
   }
@@ -481,14 +493,26 @@ function renderWeather(d: WeatherData): void {
   if (hourlyEl) {
     hourlyEl.innerHTML = d.hourly.map(h => {
       const hw = getWMO(h.weatherCode)
+      const currentClass = h.isCurrent ? 'current-hour' : ''
       return `
-        <div class="hourly-item">
+        <div class="hourly-item ${currentClass}">
           <div class="hourly-time">${h.time}</div>
           <div class="hourly-emoji">${hw.emoji}</div>
           <div class="hourly-temp">${h.temp}°</div>
         </div>
       `
     }).join('')
+
+    // Auto-scroll para a hora atual
+    setTimeout(() => {
+      const currentEl = hourlyEl.querySelector('.current-hour') as HTMLElement
+      if (currentEl && hourlyEl.parentElement) {
+        hourlyEl.parentElement.scrollTo({
+          left: currentEl.offsetLeft - (hourlyEl.parentElement.clientWidth / 2) + (currentEl.clientWidth / 2),
+          behavior: 'smooth'
+        })
+      }
+    }, 100)
   }
 }
 
@@ -509,6 +533,11 @@ let _refreshTimer: ReturnType<typeof setInterval> | null = null
 
 export async function initWeather(): Promise<void> {
   setText('weather-location-name', 'Obtendo localização...')
+
+  const drawer = document.getElementById('weather-drawer')
+  if (drawer) {
+    drawer.addEventListener('click', () => drawer.classList.toggle('open'))
+  }
 
   const load = async () => {
     try {
