@@ -35,12 +35,14 @@ function wakeUp(): void {
     const clock = document.getElementById('clock-widget')
     if (clock) {
       clock.style.transition = 'none'
+      clock.style.animation = 'none'
       document.body.classList.remove('amoled-active')
-      // Re-habilita a transição no próximo frame, depois do repositionamento
+      // Força reflow para garantir que o navegador aplique a remoção instantaneamente
+      void clock.offsetHeight
+      // Re-habilita a transição e a animação
       requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          clock.style.transition = ''
-        })
+        clock.style.transition = ''
+        clock.style.animation = ''
       })
     } else {
       document.body.classList.remove('amoled-active')

@@ -50,7 +50,7 @@ import { initFullscreen } from './fullscreen'
 import { initAmoled }     from './amoled'
 import { initUpdater }    from './updater'
 import { initSettings, setOnSettingsSaved } from './settings'
-import { loadImmichAssets, startSlideshow, stopSlideshow } from './immich'
+import { loadImmichAssets, startSlideshow, stopSlideshow, advanceSlideshow } from './immich'
 import { initWakeLock, updateWakeLock } from './wakelock'
 
 // ── State ─────────────────────────────────────────────────────
@@ -125,6 +125,7 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
   // Nada tocando → modo idle
   if (!state || !state.item || !state.is_playing) {
     document.getElementById('idle-page')?.classList.remove('playing')
+    document.getElementById('player-page')?.classList.add('not-playing')
     stopAnimationLoop()
     if (!_isIdle) {
       _isIdle = true
@@ -135,6 +136,7 @@ async function handlePlayback(state: CurrentlyPlaying | null): Promise<void> {
   }
 
   document.getElementById('idle-page')?.classList.add('playing')
+  document.getElementById('player-page')?.classList.remove('not-playing')
 
   // Nova faixa detectada
   const isNewTrack = state.item.id !== _lastTrackId
@@ -230,10 +232,25 @@ async function bootstrap(): Promise<void> {
     navigateTo(0)
   })
 
-  // Clicar no relógio dá zoom nele
+  // Clicar no relógio (Player) dá zoom nele
   const clockWidget = document.getElementById('clock-widget')
   clockWidget?.addEventListener('click', () => {
     clockWidget.classList.toggle('clock-zoomed')
+  })
+
+  // Clicar no relógio (Idle/Fotos) dá zoom nele (quando está no modo canto superior)
+  const idleClock = document.getElementById('idle-clock')
+  idleClock?.addEventListener('click', () => {
+    idleClock.classList.toggle('clock-zoomed')
+  })
+
+  // Clicar nas zonas dedicadas para avançar/voltar (como stories)
+  document.getElementById('slideshow-left-zone')?.addEventListener('click', () => {
+    advanceSlideshow(-1)
+  })
+  
+  document.getElementById('slideshow-right-zone')?.addEventListener('click', () => {
+    advanceSlideshow(1)
   })
 
   const urlParams = new URLSearchParams(window.location.search)

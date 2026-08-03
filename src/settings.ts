@@ -25,6 +25,9 @@ export interface AppSettings {
   pitchBlackMode: boolean // true = apaga até o relógio na madrugada
   pitchBlackStartTime: string // ex: "00:00"
   pitchBlackEndTime: string // ex: "05:00"
+  // Relógio Idle
+  idleClockTopRight: boolean // true = canto, false = tela cheia
+  idleClockLarge: boolean // true = tamanho aumentado no modo canto
 }
 
 const STORAGE_KEY = 'tabhub_settings'
@@ -37,6 +40,8 @@ const DEFAULTS: AppSettings = {
   karaokeMode:       true,
   keepScreenOn:      false,
   photoModeLyrics:   true,
+  idleClockTopRight: false,
+  idleClockLarge:    false,
   amoledMode:        true,
   amoledStartTime:   '22:00',
   amoledEndTime:     '06:00',
@@ -212,6 +217,10 @@ function populateFields(): void {
   const karaokeToggle = document.getElementById('settings-karaoke') as HTMLInputElement | null
   const wakelockToggle = document.getElementById('settings-wakelock') as HTMLInputElement | null
   const photoLyricsToggle = document.getElementById('settings-photo-lyrics') as HTMLInputElement | null
+  
+  const idleClockTopRightToggle = document.getElementById('settings-idle-clock-top-right') as HTMLInputElement | null
+  const idleClockLargeToggle = document.getElementById('settings-idle-clock-large') as HTMLInputElement | null
+  
   const amoledToggle = document.getElementById('settings-amoled') as HTMLInputElement | null
   const amoledStart = document.getElementById('settings-amoled-start') as HTMLInputElement | null
   const amoledEnd = document.getElementById('settings-amoled-end') as HTMLInputElement | null
@@ -226,6 +235,9 @@ function populateFields(): void {
   if (karaokeToggle) karaokeToggle.checked = s.karaokeMode
   if (wakelockToggle) wakelockToggle.checked = s.keepScreenOn
   if (photoLyricsToggle) photoLyricsToggle.checked = s.photoModeLyrics
+  if (idleClockTopRightToggle) idleClockTopRightToggle.checked = s.idleClockTopRight
+  if (idleClockLargeToggle) idleClockLargeToggle.checked = s.idleClockLarge
+  
   if (amoledToggle) amoledToggle.checked = s.amoledMode
   if (amoledStart) amoledStart.value = s.amoledStartTime
   if (amoledEnd) amoledEnd.value = s.amoledEndTime
@@ -237,6 +249,8 @@ function populateFields(): void {
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
   document.body.classList.toggle('no-photo-lyrics', !s.photoModeLyrics)
+  document.body.classList.toggle('idle-clock-top-right', s.idleClockTopRight)
+  document.body.classList.toggle('idle-clock-large', s.idleClockLarge)
   document.body.classList.toggle('amoled-large-clock', s.amoledLargeClock)
 
   // Oculta a lista de álbuns até clicar em buscar (ou podemos mantê-la vazia)
@@ -271,6 +285,10 @@ function saveAndClose(): void {
     karaokeMode:       karaokeToggle?.checked ?? true,
     keepScreenOn:      wakelockToggle?.checked ?? false,
     photoModeLyrics:   photoLyricsToggle?.checked ?? true,
+    
+    idleClockTopRight: (document.getElementById('settings-idle-clock-top-right') as HTMLInputElement)?.checked ?? false,
+    idleClockLarge:    (document.getElementById('settings-idle-clock-large') as HTMLInputElement)?.checked ?? false,
+    
     amoledMode:        amoledToggle?.checked ?? false,
     amoledStartTime:   amoledStart?.value || '22:00',
     amoledEndTime:     amoledEnd?.value || '06:00',
@@ -293,6 +311,8 @@ function saveAndClose(): void {
   saveSettings(newSettings)
   document.body.classList.toggle('no-karaoke', !newSettings.karaokeMode)
   document.body.classList.toggle('no-photo-lyrics', !newSettings.photoModeLyrics)
+  document.body.classList.toggle('idle-clock-top-right', !!newSettings.idleClockTopRight)
+  document.body.classList.toggle('idle-clock-large', !!newSettings.idleClockLarge)
   document.body.classList.toggle('amoled-large-clock', !!newSettings.amoledLargeClock)
   _onSettingsSaved?.()
   closeSettings()

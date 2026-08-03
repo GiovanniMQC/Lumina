@@ -2,7 +2,7 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <meta name="theme-color" content="#000000" />
     <meta name="description" content="Dashboard estilo Nest Hub para Spotify com letras sincronizadas e clima" />
     <title>TabHub — Spotify Dashboard</title>
@@ -12,8 +12,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-CAyRu5LZ.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BgTcV9mb.css">
+    <script type="module" crossorigin src="/assets/index-iQxihd5I.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-q93FmC0o.css">
   </head>
   <body>
     <!-- Fundo dinâmico com capa do álbum em blur -->
@@ -32,7 +32,7 @@
       <div id="swipe-container">
 
         <!-- ── Página 0: Player Spotify ──────────────────────── -->
-        <div class="swipe-page" id="player-page">
+        <div class="swipe-page not-playing" id="player-page">
           
           <div id="api-error-message" style="display: none; position: absolute; top: 120px; left: 50%; transform: translateX(-50%); background: rgba(255, 60, 60, 0.2); border: 1px solid rgba(255, 60, 60, 0.5); padding: 12px 24px; border-radius: 8px; color: #fff; z-index: 100; backdrop-filter: blur(10px); font-size: 0.9rem; font-weight: 500; text-align: center;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; vertical-align: text-bottom; margin-right: 6px;">
@@ -80,6 +80,14 @@
             <div id="lyrics-gradient-bottom"></div>
           </div>
 
+          <!-- Mensagem de idle da aba de mídia -->
+          <div id="media-idle-message" style="display: none; position: absolute; inset: 0; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.5); font-size: 1.5rem; font-family: var(--font-display);">
+            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.5;">
+              <path d="M21 3v13.5a3.5 3.5 0 1 1-3.5-3.5 3.5 3.5 0 0 1 1.5.35V6.85L9 8.8v10.7a3.5 3.5 0 1 1-3.5-3.5 3.5 3.5 0 0 1 1.5.35V3.85A1 1 0 0 1 7.82 3l12-2A1 1 0 0 1 21 3z"></path>
+            </svg>
+            Nenhuma música tocando
+          </div>
+
         </div><!-- /player-page -->
 
         <!-- ── Página 1: Idle (Modo Foto) ──────────────────────── -->
@@ -88,12 +96,20 @@
           <img id="slideshow-img-a" class="slideshow-img" src="" alt="" aria-hidden="true" />
           <img id="slideshow-img-b" class="slideshow-img" src="" alt="" aria-hidden="true" />
           <div class="slideshow-vignette"></div>
+          
+          <div id="slideshow-left-zone" style="position: absolute; left: 0; top: 0; width: 50%; height: 100%; z-index: 2; cursor: pointer;"></div>
+          <div id="slideshow-right-zone" style="position: absolute; right: 0; top: 0; width: 50%; height: 100%; z-index: 2; cursor: pointer;"></div>
+
 
           <!-- Info de descanso sobre as fotos -->
           <div class="idle-content">
             <div id="idle-clock">
               <div id="idle-time">--:--</div>
               <div id="idle-date">--- --, ----</div>
+              <div id="idle-weather">
+                <span id="idle-weather-emoji">—</span>
+                <span id="idle-weather-temp">—</span>
+              </div>
             </div>
             <div id="idle-message">
               <span class="idle-dot"></span>
@@ -234,6 +250,28 @@
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="settings-wakelock" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <span class="settings-row-label">Relógio no canto (Descanso)</span>
+              <span class="settings-row-desc">Quando não houver música, o relógio fica no canto superior direito ao invés de tela cheia.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-idle-clock-top-right" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <span class="settings-row-label">Relógio maior (no canto)</span>
+              <span class="settings-row-desc">Aumenta o tamanho do relógio quando ele estiver posicionado no canto superior direito.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-idle-clock-large" />
               <span class="toggle-track"><span class="toggle-thumb"></span></span>
             </label>
           </div>

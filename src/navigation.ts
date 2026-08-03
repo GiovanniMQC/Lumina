@@ -55,15 +55,19 @@ export function initNavigation(
 export function navigateTo(page: number, animated = true): void {
   if (!_wrapper) return
   page = Math.max(0, Math.min(page, _totalPages - 1))
+  const previousPage = _currentPage
   _currentPage = page
 
   _wrapper.style.transition = animated
     ? 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
     : 'none'
-  _wrapper.style.transform = `translateX(-${page * 100}%)`
+  _wrapper.style.transform = `translateX(-${page * 100}vw)`
 
   _dots.forEach((d, i) => d.classList.toggle('active', i === page))
-  _onPageChange?.(page)
+  
+  if (previousPage !== _currentPage) {
+    _onPageChange?.(_currentPage)
+  }
 }
 
 export function getCurrentPage(): number {

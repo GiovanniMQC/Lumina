@@ -3,52 +3,32 @@
 // ================================================================
 
 import { getSettings } from './settings'
+import NoSleep from 'nosleep.js'
 
-let wakeLockSentinel: WakeLockSentinel | null = null
+const noSleep = new NoSleep()
 
 export async function updateWakeLock(): Promise<void> {
   const { keepScreenOn } = getSettings()
 
   if (keepScreenOn) {
-    if (!wakeLockSentinel) {
-      await requestWakeLock()
+    if (!noSleep.isEnabled) {
+      try {
+        await noSleep.enable()
+        console.log('[wakelock] Tela mantida ligada ativada via NoSleep.')
+      } catch (err: any) {
+        console.warn(`[wakelock] NoSleep.enable falhou (requer clique do usuário?): ${err.message}`)
+      }
     }
   } else {
-    releaseWakeLock()
-  }
-}
-
-async function requestWakeLock(): Promise<void> {
-  try {
-    if ('wakeLock' in navigator) {
-      wakeLockSentinel = await navigator.wakeLock.request('screen')
-      wakeLockSentinel.addEventListener('release', () => {
-        wakeLockSentinel = null
-      })
-      console.log('[wakelock] Tela mantida ligada ativada.')
-    } else {
-      console.warn('[wakelock] API não suportada neste navegador.')
+    if (noSleep.isEnabled) {
+      noSleep.disable()
+      console.log('[wakelock] Wake lock liberado.')
     }
-  } catch (err: any) {
-    console.error(`[wakelock] Erro ao solicitar wake lock: ${err.name}, ${err.message}`)
-  }
-}
-
-function releaseWakeLock(): void {
-  if (wakeLockSentinel) {
-    wakeLockSentinel.release()
-      .then(() => {
-        wakeLockSentinel = null
-        console.log('[wakelock] Wake lock liberado.')
-      })
-      .catch((err: any) => {
-        console.error(`[wakelock] Erro ao liberar wake lock: ${err.message}`)
-      })
   }
 }
 
 export function initWakeLock(): void {
-  // Configuração inicial
+  // Tenta ativar logo no início (pode falhar se precisar de clique)
   updateWakeLock()
 
   // Se a aba for colocada em background e voltar, o wake lock pode ser perdido
@@ -57,4 +37,19 @@ export function initWakeLock(): void {
       updateWakeLock()
     }
   })
+
+  // Garante que o NoSleep seja ativado no primeiro toque do usuário na tela
+  document.addEventListener('click', () => {
+    const { keepScreenOn } = getSettings()
+    if (keepScreenOn && !noSleep.isEnabled) {
+      updateWakeLock()
+    }
+  }, { passive: true })
+
+  document.addEventListener('touchstart', () => {
+    const { keepScreenOn } = getSettings()
+    if (keepScreenOn && !noSleep.isEnabled) {
+      updateWakeLock()
+    }
+  }, { passive: true })
 }

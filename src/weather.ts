@@ -467,9 +467,11 @@ function renderWeather(d: WeatherData): void {
   setText('weather-maxmin',        `${d.tempMax}° / ${d.tempMin}°`)
   setText('weather-updated',       `Atualizado às ${new Date().getHours().toString().padStart(2,'0')}:${new Date().getMinutes().toString().padStart(2,'0')}`)
 
-  // Mini-clima no player (abaixo do relógio)
+  // Mini-clima no player (abaixo do relógio principal) e idle (abaixo do relógio modo foto)
   setText('mini-weather-emoji', wmo.emoji)
   setText('mini-weather-temp',  `${d.temp}° ${wmo.desc}`)
+  setText('idle-weather-emoji', wmo.emoji)
+  setText('idle-weather-temp',  `${d.temp}° ${wmo.desc}`)
 
   // Animação de fundo baseada no código WMO
   applyWeatherAnimation(wmoToEffect(d.weatherCode))

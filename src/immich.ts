@@ -106,33 +106,62 @@ export async function startSlideshow(): Promise<void> {
   }
   if (!_assetIds.length) return
 
-  if (_slideshowTimer) clearInterval(_slideshowTimer)
-
   const s = getSettings()
-  // Mostra a primeira foto imediatamente
-  advanceSlideshow()
 
-  // Intervalo de troca
-  _slideshowTimer = setInterval(() => advanceSlideshow(), s.slideshowInterval * 1000)
+  if (_slideshowTimer) {
+    clearInterval(_slideshowTimer)
+  }
+  if (_stopTimer) {
+    clearTimeout(_stopTimer)
+    _stopTimer = null
+  }
+  
+  // Set a dummy timer so advanceSlideshow knows to keep it running
+  _slideshowTimer = setInterval(() => advanceSlideshow(1), s.slideshowInterval * 1000)
+
+  advanceSlideshow()
 }
+
+let _stopTimer: ReturnType<typeof setTimeout> | null = null
 
 export function stopSlideshow(): void {
   if (_slideshowTimer) {
     clearInterval(_slideshowTimer)
     _slideshowTimer = null
   }
-  // Limpa as imagens
-  setSlideImage('slideshow-img-a', '')
-  setSlideImage('slideshow-img-b', '')
+  
+  if (_stopTimer) clearTimeout(_stopTimer)
+  
+  // Aguarda a animação de swipe terminar (500ms) antes de limpar a imagem
+  _stopTimer = setTimeout(() => {
+    setSlideImage('slideshow-img-a', '')
+    setSlideImage('slideshow-img-b', '')
+    _stopTimer = null
+  }, 500)
 }
 
 // Controla qual <img> está visível (crossfade A/B)
 let _activeSlot: 'a' | 'b' = 'a'
 
-async function advanceSlideshow(): Promise<void> {
+let _isAdvancing = false
+
+export async function advanceSlideshow(direction: 1 | -1 = 1): Promise<void> {
   if (!_assetIds.length) return
+  if (_isAdvancing) return
+  
+  _isAdvancing = true
 
   const s = getSettings()
+  
+  if (_slideshowTimer) {
+    clearInterval(_slideshowTimer)
+    _slideshowTimer = setInterval(() => advanceSlideshow(1), s.slideshowInterval * 1000)
+  }
+
+  if (direction === -1) {
+    _currentIdx = (_currentIdx - 2 + _assetIds.length) % _assetIds.length
+  }
+  
   const assetId = _assetIds[_currentIdx % _assetIds.length]
   _currentIdx++
 
@@ -152,15 +181,22 @@ async function advanceSlideshow(): Promise<void> {
       prevImg?.classList.remove('visible')
       _activeSlot = nextSlot
 
+      setTimeout(() => {
+        _isAdvancing = false
+      }, 2000)
+
       // Revoga o ObjectURL antigo após a troca para liberar memória
       setTimeout(() => {
-        const old = _objectUrls.shift()
-        if (old) URL.revokeObjectURL(old)
+        if (_objectUrls.length > 2) {
+          const old = _objectUrls.shift()
+          if (old) URL.revokeObjectURL(old)
+        }
       }, 3000)
     }
 
     _objectUrls.push(objectUrl)
   } catch (err) {
+    _isAdvancing = false
     console.warn('[immich] Erro ao carregar foto:', err)
   }
 }
