@@ -52,6 +52,7 @@ import { initUpdater }    from './updater'
 import { initSettings, setOnSettingsSaved } from './settings'
 import { loadImmichAssets, startSlideshow, stopSlideshow, advanceSlideshow } from './immich'
 import { initWakeLock, updateWakeLock } from './wakelock'
+import { initTimers } from './timers'
 
 // ── State ─────────────────────────────────────────────────────
 
@@ -206,6 +207,7 @@ async function bootstrap(): Promise<void> {
   initWakeLock()
   initAmoled()
   initUpdater()
+  initTimers()
 
   setOnSettingsSaved(() => {
     loadImmichAssets()
@@ -300,8 +302,8 @@ async function bootstrap(): Promise<void> {
     initSpotify(_tokens.accessToken, ensureFreshToken)
   }
 
-  // Inicia navegação swipe (3 páginas: Mídia, Fotos, Clima)
-  initNavigation('swipe-container', '.nav-dot', 3, (page) => {
+  // Inicia navegação swipe (4 páginas: Mídia, Fotos, Clima, Timers)
+  initNavigation('swipe-container', '.nav-dot', 4, (page) => {
     if (page === 0) {
       // Se entrar na aba de mídia, força uma atualização para pegar status na hora,
       // desde que não estejamos em cooldown de erro da API.

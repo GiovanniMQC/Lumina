@@ -12,8 +12,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-CqFJhNhk.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DRUZ7-n_.css">
+    <script type="module" crossorigin src="/assets/index-BFegmYRr.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-BP832oo3.css">
   </head>
   <body>
     <!-- Fundo dinâmico com capa do álbum em blur -->
@@ -60,6 +60,12 @@
               <span id="mini-weather-temp">—</span>
             </div>
           </div>
+          <!-- Timer overlay discreto -->
+          <button id="timer-overlay-player" class="timer-overlay" aria-label="Ver timer ativo" style="display:none">
+            <span class="ov-dot"></span>
+            <span class="ov-icon" aria-hidden="true">⏱</span>
+            <span class="ov-time">--:--</span>
+          </button>
 
           <!-- Área central com info da música -->
           <div id="now-playing">
@@ -120,6 +126,12 @@
                 <span id="idle-weather-temp">—</span>
               </div>
             </div>
+            <!-- Timer overlay discreto (modo foto) -->
+            <button id="timer-overlay-idle" class="timer-overlay" aria-label="Ver timer ativo" style="display:none">
+              <span class="ov-dot"></span>
+              <span class="ov-icon" aria-hidden="true">⏱</span>
+              <span class="ov-time">--:--</span>
+            </button>
             <div id="idle-message">
               <span class="idle-dot"></span>
               <span>Nenhuma música tocando</span>
@@ -213,13 +225,114 @@
 
         </div><!-- /weather-page -->
 
+        <!-- ── Página 3: Timers de Cozinha ──────────────────────── -->
+        <div class="swipe-page" id="timers-page">
+
+          <!-- Stage: full-height timer display area -->
+          <div id="timer-stage">
+
+            <!-- Ambient glow (reacts to timer state) -->
+            <div id="timer-glow" aria-hidden="true"></div>
+
+            <!-- Clock — top right corner -->
+            <div id="timers-clock-widget">
+              <div id="timers-clock-time">--:--</div>
+            </div>
+
+            <!-- Empty state (no timers) -->
+            <div id="timer-empty-state" aria-label="Sem timers ativos">
+              <div class="timer-empty-icon" aria-hidden="true">⏱</div>
+              <div class="timer-empty-text">Nenhum timer ativo</div>
+              <div class="timer-empty-hint">Use o painel abaixo para criar um</div>
+            </div>
+
+            <!-- Active timer display (hidden when no timers) -->
+            <div id="timer-active-wrap" aria-live="off">
+
+              <!-- Left: Arc + time display -->
+              <div class="timer-arc-side">
+                <div class="timer-arc-wrapper">
+                  <svg id="timer-arc-svg" viewBox="0 0 300 300" aria-hidden="true">
+                    <!-- 270° arc, rotate(135 150 150) → gap at 6 o'clock (bottom) -->
+                    <circle id="timer-arc-track" cx="150" cy="150" r="120"
+                            transform="rotate(135 150 150)"/>
+                    <circle id="timer-arc-fg"    cx="150" cy="150" r="120"
+                            transform="rotate(135 150 150)"/>
+                  </svg>
+                  <!-- Time info overlaid in center of arc -->
+                  <div id="timer-main-info">
+                    <div id="timer-main-time" aria-atomic="true">0:00</div>
+                    <div id="timer-main-state" class="timer-main-state timer-state--running">a correr</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right: Controls -->
+              <div class="timer-ctrl-side">
+                <div id="timer-main-controls">
+                  <button id="timer-ctrl-add" class="timer-ctrl-btn timer-ctrl-pill" aria-label="Adicionar 1 minuto">+1:00</button>
+                  <button id="timer-ctrl-toggle" class="timer-ctrl-btn timer-ctrl-primary" aria-label="Pausar timer"></button>
+                  <div class="timer-ctrl-row">
+                    <button id="timer-ctrl-reset"  class="timer-ctrl-btn timer-ctrl-small" aria-label="Reiniciar timer"></button>
+                    <button id="timer-ctrl-remove" class="timer-ctrl-btn timer-ctrl-small" aria-label="Remover timer"></button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Other timers as chips (horizontal strip) -->
+            <div id="timer-chips" role="list" aria-label="Outros timers"></div>
+
+          </div><!-- /timer-stage -->
+
+          <!-- Bottom sheet (retractable) -->
+          <div id="timer-sheet" role="region" aria-label="Painel de tempo">
+            <!-- Drag handle -->
+            <button id="timer-sheet-handle" aria-expanded="true" aria-label="Recolher painel">
+              <span class="sheet-handle-bar"></span>
+            </button>
+
+            <div id="timer-sheet-content">
+              <!-- Sheet title -->
+              <div id="timer-sheet-title">Criar Timer</div>
+
+              <!-- Quick add row -->
+              <div id="timer-quick-row" role="group" aria-label="Adição rápida">
+                <button class="tq-btn" id="tq-1m"  data-secs="60"   aria-label="Adicionar 1 minuto" >+1m</button>
+                <button class="tq-btn" id="tq-5m"  data-secs="300"  aria-label="Adicionar 5 minutos">+5m</button>
+                <button class="tq-btn" id="tq-10m" data-secs="600"  aria-label="Adicionar 10 minutos">+10m</button>
+                <button class="tq-btn" id="tq-15m" data-secs="900"  aria-label="Adicionar 15 minutos">+15m</button>
+                <button class="tq-btn" id="tq-30m" data-secs="1800" aria-label="Adicionar 30 minutos">+30m</button>
+              </div>
+
+              <!-- Custom time row -->
+              <div id="timer-custom-row" role="group" aria-label="Tempo personalizado">
+                <button class="timer-adj-btn" id="timer-adj-minus" data-delta="-60" aria-label="Diminuir 1 minuto">−</button>
+                <span id="timer-custom-display" aria-live="polite">5m</span>
+                <button class="timer-adj-btn" id="timer-adj-plus"  data-delta="60"  aria-label="Aumentar 1 minuto">+</button>
+                <button id="timer-sheet-add-btn" aria-label="Adicionar tempo personalizado">Adicionar</button>
+              </div>
+
+              <!-- Divider + New Timer FAB -->
+              <div class="sheet-divider" aria-hidden="true"></div>
+              <button id="timer-new-btn" aria-label="Criar novo timer independente">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20" aria-hidden="true"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                Novo Timer
+              </button>
+            </div>
+          </div><!-- /timer-sheet -->
+
+        </div><!-- /timers-page -->
+
       </div><!-- /swipe-container -->
 
       <!-- Indicadores de página + botão de configurações -->
       <div id="nav-dots">
-        <button class="nav-dot active" data-page="0" aria-label="Player" title="Música"></button>
-        <button class="nav-dot"        data-page="1" aria-label="Fotos"  title="Fotos"></button>
-        <button class="nav-dot"        data-page="2" aria-label="Clima"  title="Clima"></button>
+        <button class="nav-dot active" data-page="0" aria-label="Player"  title="Música"></button>
+        <button class="nav-dot"        data-page="1" aria-label="Fotos"   title="Fotos"></button>
+        <button class="nav-dot"        data-page="2" aria-label="Clima"   title="Clima"></button>
+        <button class="nav-dot"        data-page="3" aria-label="Timers"  title="Timers"></button>
       </div>
 
       </div>
@@ -350,6 +463,21 @@
               <label for="settings-pitchblack-end" style="font-size: 0.9rem; color: var(--clr-text-faint);">às</label>
               <input type="time" id="settings-pitchblack-end" class="settings-field" style="padding: 4px 8px; max-width: 100px;" />
             </div>
+          </div>
+        </section>
+
+        <!-- Seção: Timers -->
+        <section class="settings-section">
+          <h3 class="settings-section-title">Timers de Cozinha</h3>
+          <div class="settings-row">
+            <div class="settings-row-info">
+              <span class="settings-row-label">Vibrar ao completar</span>
+              <span class="settings-row-desc">Vibra o dispositivo quando um timer de cozinha termina.</span>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="settings-timer-vibrate" />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
           </div>
         </section>
 

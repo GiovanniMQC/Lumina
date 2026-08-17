@@ -28,6 +28,9 @@ export interface AppSettings {
   // Relógio Idle
   idleClockTopRight: boolean // true = canto, false = tela cheia
   idleClockLarge: boolean // true = tamanho aumentado no modo canto
+
+  // Timers
+  timerVibrate: boolean // true = vibra o dispositivo ao completar um timer
 }
 
 const STORAGE_KEY = 'tabhub_settings'
@@ -49,6 +52,7 @@ const DEFAULTS: AppSettings = {
   pitchBlackMode:    true,
   pitchBlackStartTime: '00:00',
   pitchBlackEndTime:   '05:00',
+  timerVibrate:        false,
 }
 
 // ── Leitura / Escrita ─────────────────────────────────────────
@@ -246,6 +250,9 @@ function populateFields(): void {
   if (pitchBlackStart) pitchBlackStart.value = s.pitchBlackStartTime
   if (pitchBlackEnd) pitchBlackEnd.value = s.pitchBlackEndTime
 
+  const timerVibrateToggle = document.getElementById('settings-timer-vibrate') as HTMLInputElement | null
+  if (timerVibrateToggle) timerVibrateToggle.checked = s.timerVibrate
+
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
   document.body.classList.toggle('no-photo-lyrics', !s.photoModeLyrics)
@@ -296,6 +303,7 @@ function saveAndClose(): void {
     pitchBlackMode:    pitchBlackToggle?.checked ?? true,
     pitchBlackStartTime: pitchBlackStart?.value || '00:00',
     pitchBlackEndTime:   pitchBlackEnd?.value || '05:00',
+    timerVibrate:      (document.getElementById('settings-timer-vibrate') as HTMLInputElement)?.checked ?? false,
   }
 
   // Salva também os álbuns selecionados (apenas se a lista estiver preenchida no DOM)

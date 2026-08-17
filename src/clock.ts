@@ -48,10 +48,13 @@ export function initClock(): void {
   const idleDate = document.getElementById('idle-date')
   const weatherTime = document.getElementById('weather-clock-time')
   const weatherDate = document.getElementById('weather-clock-date')
+  const timersTime = document.getElementById('timers-clock-time')
 
   if (playerTime && playerDate) clocks.push({ time: playerTime, date: playerDate })
   if (idleTime && idleDate) clocks.push({ time: idleTime, date: idleDate })
   if (weatherTime && weatherDate) clocks.push({ time: weatherTime, date: weatherDate })
+  // Timers page only shows time (no date element needed)
+  if (timersTime) clocks.push({ time: timersTime, date: { textContent: '' } as HTMLElement })
 
   tick() // imediato
   setInterval(tick, 1000)
