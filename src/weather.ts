@@ -5,6 +5,9 @@
 
 const OPEN_METEO  = 'https://api.open-meteo.com/v1/forecast'
 const NOMINATIM   = 'https://nominatim.openstreetmap.org/reverse'
+const NOMINATIM_SEARCH = 'https://nominatim.openstreetmap.org/search'
+
+import { getSettings } from './settings'
 
 // ── WMO Weather Code → PT-BR ──────────────────────────────────
 
@@ -53,8 +56,8 @@ function windDir(deg: number): string {
 
 // ── Geolocation ───────────────────────────────────────────────
 
-// Vila Nova de Famalicão, Portugal
-const DEFAULT_COORDS = { latitude: 41.4055, longitude: -8.5196 }
+// Localização padrão de fallback (Porto, Portugal)
+const DEFAULT_COORDS = { latitude: 41.1496, longitude: -8.6110 }
 
 async function getCoords(): Promise<{ latitude: number; longitude: number }> {
   return new Promise((resolve) => {
@@ -530,6 +533,7 @@ function showWeatherError(msg: string): void {
 // ── Public API ────────────────────────────────────────────────
 
 let _refreshTimer: ReturnType<typeof setInterval> | null = null
+let _isWeatherListenerAdded = false
 
 export async function initWeather(): Promise<void> {
   setText('weather-location-name', 'Obtendo localização...')
@@ -541,11 +545,38 @@ export async function initWeather(): Promise<void> {
 
   const load = async () => {
     try {
-      const coords  = await getCoords()
-      const [city, data] = await Promise.all([
-        getCityName(coords.latitude, coords.longitude),
-        fetchWeatherData(coords.latitude, coords.longitude),
-      ])
+      const s = getSettings()
+      let lat, lon, city
+
+      setText('weather-location-name', 'Atualizando clima...')
+
+      if (s.weatherLocation && s.weatherLocation.trim() !== '') {
+        // Busca coordenadas por nome da cidade
+        try {
+          const res = await fetch(`${NOMINATIM_SEARCH}?q=${encodeURIComponent(s.weatherLocation)}&format=json&limit=1`, {
+            headers: { 'Accept-Language': 'pt-BR,pt;q=0.9' }
+          })
+          const data = await res.json()
+          if (data && data.length > 0) {
+            lat = parseFloat(data[0].lat)
+            lon = parseFloat(data[0].lon)
+            city = data[0].display_name.split(',')[0]
+          } else {
+            throw new Error(`Localização "${s.weatherLocation}" não encontrada`)
+          }
+        } catch (e) {
+          console.warn('[weather] Erro ao buscar cidade manualmente:', e)
+          throw new Error('Localização não encontrada')
+        }
+      } else {
+        // Usa geolocalizacao (com fallback para Porto)
+        const coords  = await getCoords()
+        lat = coords.latitude
+        lon = coords.longitude
+        city = await getCityName(lat, lon)
+      }
+
+      const data = await fetchWeatherData(lat, lon)
       data.city = city
       renderWeather(data)
     } catch (err) {
@@ -563,4 +594,12 @@ export async function initWeather(): Promise<void> {
   // Atualiza a cada 10 minutos
   if (_refreshTimer) clearInterval(_refreshTimer)
   _refreshTimer = setInterval(load, 10 * 60 * 1000)
+
+  // Atualiza imediatamente caso as configurações mudem
+  if (!_isWeatherListenerAdded) {
+    window.addEventListener('lumina:settings-changed', () => {
+      load()
+    })
+    _isWeatherListenerAdded = true
+  }
 }

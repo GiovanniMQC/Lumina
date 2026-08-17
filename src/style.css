@@ -1,5 +1,5 @@
 /* ================================================================
-   TabHub — Design System (Nest Hub Dark Theme)
+   Lumina — Design System (Nest Hub Dark Theme)
    ================================================================ */
 
 /* ── Reset & Base ───────────────────────────────────────────── */
@@ -1488,6 +1488,7 @@ body.no-karaoke .lyric-line.upcoming {
   position: relative;
   /* needed for absolute canvas */
 }
+
 #weather-page::-webkit-scrollbar {
   display: none;
 }
@@ -1611,7 +1612,8 @@ body.no-karaoke .lyric-line.upcoming {
 @media (max-height: 700px) {
   #weather-content {
     justify-content: flex-start;
-    padding-bottom: 60px; /* Space for nav-dots */
+    padding-bottom: 60px;
+    /* Space for nav-dots */
   }
 }
 
@@ -1727,7 +1729,8 @@ body.no-karaoke .lyric-line.upcoming {
   flex-shrink: 0;
   margin-left: calc(-1 * var(--space-xl));
   margin-right: calc(-1 * var(--space-xl));
-  padding: 12px var(--space-xl) var(--space-md); /* 12px top padding prevents glow/scale clipping */
+  padding: 12px var(--space-xl) var(--space-md);
+  /* 12px top padding prevents glow/scale clipping */
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   /* esconde a scrollbar mas permite rolar */
@@ -1805,7 +1808,8 @@ body.no-karaoke .lyric-line.upcoming {
   display: flex;
   flex-direction: column;
   gap: var(--space-md);
-  transform: translateY(calc(100% - 48px)); /* 48px is the handle + title height */
+  transform: translateY(calc(100% - 48px));
+  /* 48px is the handle + title height */
   transition: transform var(--transition-spring);
   z-index: 10;
   cursor: pointer;
@@ -1992,26 +1996,33 @@ body.no-karaoke .lyric-line.upcoming {
     padding-bottom: var(--space-md);
     gap: var(--space-sm);
   }
+
   #weather-content {
     gap: var(--space-sm);
     justify-content: flex-start;
   }
+
   #weather-emoji {
     font-size: clamp(2.5rem, 10vw, 3.5rem);
   }
+
   #weather-temp-display {
     font-size: clamp(3rem, 12vw, 4rem);
     line-height: 1;
   }
+
   #weather-main {
     gap: var(--space-md);
   }
+
   #weather-location-name {
     font-size: 1.1rem;
   }
+
   .weather-stat-card {
     padding: var(--space-sm) var(--space-md);
   }
+
   .stat-value {
     font-size: 1.1rem;
   }
@@ -2019,18 +2030,22 @@ body.no-karaoke .lyric-line.upcoming {
 
 /* --- Phone (telas pequenas verticais) --- */
 @media (max-width: 600px) {
+
   /* Zera o top padding do content para subir ao nível do relógio */
   #weather-content {
     padding-top: 0;
     gap: var(--space-md);
-    justify-content: flex-start; /* Evita que o space-evenly esmague ou vaze a tela no celular */
-    padding-bottom: 60px; /* Espaço para os nav-dots não cobrirem os itens no scroll */
+    justify-content: flex-start;
+    /* Evita que o space-evenly esmague ou vaze a tela no celular */
+    padding-bottom: 60px;
+    /* Espaço para os nav-dots não cobrirem os itens no scroll */
   }
 
   /* Reduz os elementos massivos */
   #weather-emoji {
     font-size: clamp(3rem, 15vw, 4rem);
   }
+
   #weather-temp-display {
     font-size: clamp(3.5rem, 16vw, 4.5rem);
   }
@@ -2044,6 +2059,7 @@ body.no-karaoke .lyric-line.upcoming {
   #weather-stats {
     grid-template-columns: repeat(2, 1fr);
   }
+
   #weather-page::-webkit-scrollbar {
     display: none;
   }
@@ -2156,12 +2172,12 @@ body.amoled-active.amoled-large-clock #clock-widget {
 
 /* ── CSS Custom Properties ───────────────────────────────────── */
 :root {
-  --timer-accent:     #6DB8FF;
+  --timer-accent: #6DB8FF;
   --timer-accent-rgb: 109, 184, 255;
-  --timer-warn:       #FF7043;
-  --timer-done:       #4CAF50;
-  --sheet-height:     260px;
-  --sheet-handle-h:   48px;
+  --timer-warn: #FF7043;
+  --timer-done: #4CAF50;
+  --sheet-height: 260px;
+  --sheet-handle-h: 48px;
 }
 
 /* ── Page ────────────────────────────────────────────────────── */
@@ -2180,11 +2196,12 @@ body.amoled-active.amoled-large-clock #clock-widget {
   flex: 1;
   position: relative;
   display: flex;
-  flex-direction: row;         /* LANDSCAPE: horizontal */
+  flex-direction: row;
+  /* LANDSCAPE: horizontal */
   align-items: center;
   justify-content: center;
   /* Reduced top padding, fixed 72px bottom padding to perfectly clear the handle */
-  padding: 12px 24px 72px; 
+  padding: 12px 24px 72px;
   overflow: visible;
 }
 
@@ -2227,9 +2244,17 @@ body.amoled-active.amoled-large-clock #clock-widget {
   z-index: 1;
 }
 
-#timers-page.has-timers  #timer-empty-state  { display: none; }
-#timers-page:not(.has-timers) #timer-active-wrap { display: none; }
-#timers-page:not(.has-timers) #timer-chips       { display: none; }
+#timers-page.has-timers #timer-empty-state {
+  display: none;
+}
+
+#timers-page:not(.has-timers) #timer-active-wrap {
+  display: none;
+}
+
+#timers-page:not(.has-timers) #timer-chips {
+  display: none;
+}
 
 .timer-empty-icon {
   font-size: 2.8rem;
@@ -2254,10 +2279,12 @@ body.amoled-active.amoled-large-clock #clock-widget {
 /* ── Active timer wrapper — LANDSCAPE (row) ──────────────────── */
 #timer-active-wrap {
   display: flex;
-  flex-direction: row;        /* arc LEFT | controls RIGHT */
+  flex-direction: row;
+  /* arc LEFT | controls RIGHT */
   align-items: center;
   justify-content: center;
-  gap: clamp(24px, 6vw, 120px); /* Spread out arc and controls */
+  gap: clamp(24px, 6vw, 120px);
+  /* Spread out arc and controls */
   width: 100%;
   z-index: 1;
 }
@@ -2345,9 +2372,17 @@ body.amoled-active.amoled-large-clock #clock-widget {
   transition: color 0.4s ease;
 }
 
-.timer-state--running { color: var(--timer-accent); }
-.timer-state--paused  { color: rgba(255, 255, 255, 0.45); }
-.timer-state--done    { color: var(--timer-done); }
+.timer-state--running {
+  color: var(--timer-accent);
+}
+
+.timer-state--paused {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.timer-state--done {
+  color: var(--timer-done);
+}
 
 /* ── Controls side (right column) ────────────────────────────── */
 .timer-ctrl-side {
@@ -2361,7 +2396,8 @@ body.amoled-active.amoled-large-clock #clock-widget {
 
 #timer-main-controls {
   display: flex;
-  flex-direction: column;   /* stack vertically on right */
+  flex-direction: column;
+  /* stack vertically on right */
   align-items: center;
   justify-content: center;
   gap: clamp(12px, 3vh, 20px);
@@ -2378,7 +2414,8 @@ body.amoled-active.amoled-large-clock #clock-widget {
 /* +1:00 Pill Button */
 .timer-ctrl-pill {
   min-width: clamp(100px, 15vw, 120px);
-  min-height: 64px; /* Fixed proportional height to prevent squishing */
+  min-height: 64px;
+  /* Fixed proportional height to prevent squishing */
   border-radius: 32px;
   font-family: var(--font-display);
   font-size: 1.25rem;
@@ -2389,7 +2426,8 @@ body.amoled-active.amoled-large-clock #clock-widget {
 /* Base button shape (now pills instead of small circles) */
 .timer-ctrl-btn {
   min-width: clamp(90px, 15vw, 120px);
-  min-height: 72px; /* Fixed proportional height */
+  min-height: 72px;
+  /* Fixed proportional height */
   border-radius: 36px;
   border: none;
   background: rgba(255, 255, 255, 0.07);
@@ -2406,13 +2444,20 @@ body.amoled-active.amoled-large-clock #clock-widget {
   height: 32px;
 }
 
-.timer-ctrl-btn:hover  { background: rgba(255, 255, 255, 0.13); color: #fff; }
-.timer-ctrl-btn:active { transform: scale(0.92); }
+.timer-ctrl-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+  color: #fff;
+}
+
+.timer-ctrl-btn:active {
+  transform: scale(0.92);
+}
 
 /* Primary: play/pause — Huge Squircle/Pill */
 .timer-ctrl-primary {
   min-width: clamp(110px, 20vw, 140px);
-  min-height: clamp(110px, 20vw, 140px); /* Symmetric scaling keeps it perfectly shaped! */
+  min-height: clamp(110px, 20vw, 140px);
+  /* Symmetric scaling keeps it perfectly shaped! */
   border-radius: 48px;
   background: rgba(var(--timer-accent-rgb), 0.15);
   border: 1px solid rgba(var(--timer-accent-rgb), 0.35);
@@ -2438,7 +2483,8 @@ body.amoled-active.amoled-large-clock #clock-widget {
 /* Secondary small row buttons */
 .timer-ctrl-small {
   min-width: clamp(80px, 12vw, 90px);
-  min-height: 64px; /* Fixed proportional height */
+  min-height: 64px;
+  /* Fixed proportional height */
   border-radius: 32px;
 }
 
@@ -2506,9 +2552,19 @@ body.amoled-active.amoled-large-clock #clock-widget {
 }
 
 @keyframes alarm-shake {
-  0%, 100% { transform: rotate(0deg); }
-  25% { transform: rotate(-15deg); }
-  75% { transform: rotate(15deg); }
+
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-15deg);
+  }
+
+  75% {
+    transform: rotate(15deg);
+  }
 }
 
 /* ── Chips (other timers) ────────────────────────────────────── */
@@ -2527,7 +2583,10 @@ body.amoled-active.amoled-large-clock #clock-widget {
   scrollbar-width: none;
   z-index: 2;
 }
-#timer-chips::-webkit-scrollbar { display: none; }
+
+#timer-chips::-webkit-scrollbar {
+  display: none;
+}
 
 .timer-chip {
   display: inline-flex;
@@ -2549,8 +2608,13 @@ body.amoled-active.amoled-large-clock #clock-widget {
   flex-shrink: 0;
 }
 
-.timer-chip:hover  { background: rgba(255, 255, 255, 0.12); }
-.timer-chip:active { transform: scale(0.93); }
+.timer-chip:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.timer-chip:active {
+  transform: scale(0.93);
+}
 
 .chip-dot {
   width: 8px;
@@ -2559,12 +2623,27 @@ body.amoled-active.amoled-large-clock #clock-widget {
   flex-shrink: 0;
 }
 
-.chip-dot--running { background: var(--timer-accent); box-shadow: 0 0 4px rgba(var(--timer-accent-rgb), 0.7); }
-.chip-dot--paused  { background: rgba(255, 255, 255, 0.35); }
-.chip-dot--done    { background: var(--timer-done); }
+.chip-dot--running {
+  background: var(--timer-accent);
+  box-shadow: 0 0 4px rgba(var(--timer-accent-rgb), 0.7);
+}
 
-.timer-chip--running { border-color: rgba(var(--timer-accent-rgb), 0.3); }
-.timer-chip--done    { border-color: rgba(76, 175, 80, 0.35); color: var(--timer-done); }
+.chip-dot--paused {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.chip-dot--done {
+  background: var(--timer-done);
+}
+
+.timer-chip--running {
+  border-color: rgba(var(--timer-accent-rgb), 0.3);
+}
+
+.timer-chip--done {
+  border-color: rgba(76, 175, 80, 0.35);
+  color: var(--timer-done);
+}
 
 /* ── Bottom Sheet ────────────────────────────────────────────── */
 #timer-sheet {
@@ -2611,7 +2690,8 @@ body.amoled-active.amoled-large-clock #clock-widget {
   background: transparent;
   cursor: pointer;
   display: flex;
-  align-items: flex-start; /* align bar to top so it stays visible when mostly hidden */
+  align-items: flex-start;
+  /* align bar to top so it stays visible when mostly hidden */
   justify-content: center;
   padding: 8px 0 0 0;
   touch-action: none;
@@ -2676,8 +2756,14 @@ body.amoled-active.amoled-large-clock #clock-widget {
   white-space: nowrap;
 }
 
-.tq-btn:hover  { background: rgba(var(--timer-accent-rgb), 0.18); border-color: rgba(var(--timer-accent-rgb), 0.4); }
-.tq-btn:active { transform: scale(0.92); }
+.tq-btn:hover {
+  background: rgba(var(--timer-accent-rgb), 0.18);
+  border-color: rgba(var(--timer-accent-rgb), 0.4);
+}
+
+.tq-btn:active {
+  transform: scale(0.92);
+}
 
 /* ── Custom time row ─────────────────────────────────────────── */
 #timer-custom-row {
@@ -2716,8 +2802,13 @@ body.amoled-active.amoled-large-clock #clock-widget {
   -webkit-user-select: none;
 }
 
-.timer-adj-btn:hover  { background: rgba(255, 255, 255, 0.13); }
-.timer-adj-btn:active { transform: scale(0.88); }
+.timer-adj-btn:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.timer-adj-btn:active {
+  transform: scale(0.88);
+}
 
 #timer-sheet-add-btn {
   min-height: 46px;
@@ -2733,8 +2824,13 @@ body.amoled-active.amoled-large-clock #clock-widget {
   transition: background var(--transition-fast), transform var(--transition-fast);
 }
 
-#timer-sheet-add-btn:hover  { background: rgba(var(--timer-accent-rgb), 0.22); }
-#timer-sheet-add-btn:active { transform: scale(0.92); }
+#timer-sheet-add-btn:hover {
+  background: rgba(var(--timer-accent-rgb), 0.22);
+}
+
+#timer-sheet-add-btn:active {
+  transform: scale(0.92);
+}
 
 /* Divider */
 .sheet-divider {
@@ -2765,8 +2861,13 @@ body.amoled-active.amoled-large-clock #clock-widget {
   box-shadow: 0 3px 16px rgba(var(--timer-accent-rgb), 0.3);
 }
 
-#timer-new-btn:hover  { background: #8ECEFF; }
-#timer-new-btn:active { transform: scale(0.95); }
+#timer-new-btn:hover {
+  background: #8ECEFF;
+}
+
+#timer-new-btn:active {
+  transform: scale(0.95);
+}
 
 /* ── Warning (last 10s) ──────────────────────────────────────── */
 #timer-stage.timer-stage--warning #timer-main-time {
@@ -2775,8 +2876,15 @@ body.amoled-active.amoled-large-clock #clock-widget {
 }
 
 @keyframes timer-warn-pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.6; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.6;
+  }
 }
 
 /* ── Discrete overlay on other pages ─────────────────────────── */
@@ -2810,9 +2918,14 @@ body.amoled-active.amoled-large-clock #clock-widget {
   pointer-events: auto;
 }
 
-.timer-overlay:hover { background: rgba(255, 255, 255, 0.12); }
+.timer-overlay:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
 
-.ov-icon { font-size: 0.7rem; opacity: 0.55; }
+.ov-icon {
+  font-size: 0.7rem;
+  opacity: 0.55;
+}
 
 .ov-dot {
   width: 6px;
@@ -2823,16 +2936,38 @@ body.amoled-active.amoled-large-clock #clock-widget {
   transition: background 0.3s ease;
 }
 
-.timer-overlay.ov--running .ov-dot { background: var(--timer-accent); box-shadow: 0 0 4px rgba(var(--timer-accent-rgb), 0.8); }
-.timer-overlay.ov--warn    .ov-dot { background: var(--timer-warn); animation: ov-dot-blink 0.8s ease-in-out infinite; }
-.timer-overlay.ov--done    .ov-dot { background: var(--timer-done); animation: ov-dot-blink 0.6s ease-in-out 3; }
-.timer-overlay.ov--paused  .ov-dot { background: rgba(255, 255, 255, 0.35); }
+.timer-overlay.ov--running .ov-dot {
+  background: var(--timer-accent);
+  box-shadow: 0 0 4px rgba(var(--timer-accent-rgb), 0.8);
+}
+
+.timer-overlay.ov--warn .ov-dot {
+  background: var(--timer-warn);
+  animation: ov-dot-blink 0.8s ease-in-out infinite;
+}
+
+.timer-overlay.ov--done .ov-dot {
+  background: var(--timer-done);
+  animation: ov-dot-blink 0.6s ease-in-out 3;
+}
+
+.timer-overlay.ov--paused .ov-dot {
+  background: rgba(255, 255, 255, 0.35);
+}
 
 @keyframes ov-dot-blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.15; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.15;
+  }
 }
 
 #timer-overlay-player,
-#timer-overlay-idle { display: flex; }
-
+#timer-overlay-idle {
+  display: flex;
+}

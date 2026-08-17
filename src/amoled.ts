@@ -20,7 +20,7 @@ export function initAmoled(): void {
   document.addEventListener('click', wakeUp, { passive: true })
   
   // Re-checa quando as configurações mudam
-  window.addEventListener('tabhub:settings-changed', checkAmoledState)
+  window.addEventListener('lumina:settings-changed', checkAmoledState)
   
   checkAmoledState()
 }

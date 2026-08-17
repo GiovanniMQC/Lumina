@@ -1,5 +1,5 @@
 // ================================================================
-//  main.ts — Orquestrador principal do TabHub Dashboard
+//  main.ts — Orquestrador principal do Lumina Dashboard
 // ================================================================
 
 import './style.css'

@@ -7,7 +7,7 @@
 // ================================================================
 
 const LRCLIB_BASE = 'https://lrclib.net/api'
-const HEADERS     = { 'Lrclib-Client': 'TabHub/1.0 (dashboard)' }
+const HEADERS     = { 'Lrclib-Client': 'Lumina/1.0 (dashboard)' }
 
 export interface LyricLine {
   timeMs: number

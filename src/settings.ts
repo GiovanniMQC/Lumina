@@ -31,9 +31,12 @@ export interface AppSettings {
 
   // Timers
   timerVibrate: boolean // true = vibra o dispositivo ao completar um timer
+
+  // Clima
+  weatherLocation: string // se preenchido, usa Nominatim. Se vazio, usa Geolocation
 }
 
-const STORAGE_KEY = 'tabhub_settings'
+const STORAGE_KEY = 'lumina_settings'
 
 const DEFAULTS: AppSettings = {
   immichUrl:         '',
@@ -53,6 +56,7 @@ const DEFAULTS: AppSettings = {
   pitchBlackStartTime: '00:00',
   pitchBlackEndTime:   '05:00',
   timerVibrate:        false,
+  weatherLocation:     '',
 }
 
 // ── Leitura / Escrita ─────────────────────────────────────────
@@ -73,7 +77,7 @@ export function saveSettings(settings: Partial<AppSettings>): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
 
   // Dispara evento customizado para outros módulos reagirem
-  window.dispatchEvent(new CustomEvent('tabhub:settings-changed', { detail: updated }))
+  window.dispatchEvent(new CustomEvent('lumina:settings-changed', { detail: updated }))
 }
 
 // ── Settings Modal UI ─────────────────────────────────────────
@@ -253,6 +257,9 @@ function populateFields(): void {
   const timerVibrateToggle = document.getElementById('settings-timer-vibrate') as HTMLInputElement | null
   if (timerVibrateToggle) timerVibrateToggle.checked = s.timerVibrate
 
+  const weatherLocationInput = document.getElementById('settings-weather-location') as HTMLInputElement | null
+  if (weatherLocationInput) weatherLocationInput.value = s.weatherLocation
+
   // Aplica a classe no body já ao carregar
   document.body.classList.toggle('no-karaoke', !s.karaokeMode)
   document.body.classList.toggle('no-photo-lyrics', !s.photoModeLyrics)
@@ -304,6 +311,7 @@ function saveAndClose(): void {
     pitchBlackStartTime: pitchBlackStart?.value || '00:00',
     pitchBlackEndTime:   pitchBlackEnd?.value || '05:00',
     timerVibrate:      (document.getElementById('settings-timer-vibrate') as HTMLInputElement)?.checked ?? false,
+    weatherLocation:   (document.getElementById('settings-weather-location') as HTMLInputElement)?.value.trim() ?? '',
   }
 
   // Salva também os álbuns selecionados (apenas se a lista estiver preenchida no DOM)
