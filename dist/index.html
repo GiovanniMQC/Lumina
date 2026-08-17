@@ -12,8 +12,8 @@
       href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-    <script type="module" crossorigin src="/assets/index-BFegmYRr.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-BP832oo3.css">
+    <script type="module" crossorigin src="/assets/index-C460ePpw.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-B2acOTrC.css">
   </head>
   <body>
     <!-- Fundo dinâmico com capa do álbum em blur -->
@@ -333,6 +333,15 @@
         <button class="nav-dot"        data-page="1" aria-label="Fotos"   title="Fotos"></button>
         <button class="nav-dot"        data-page="2" aria-label="Clima"   title="Clima"></button>
         <button class="nav-dot"        data-page="3" aria-label="Timers"  title="Timers"></button>
+      </div>
+
+      <!-- Alarme Banner (Topo) -->
+      <div id="alarm-banner" aria-live="assertive" class="alarm-banner-hidden">
+        <div class="alarm-banner-content">
+          <svg viewBox="0 0 24 24" fill="currentColor" class="alarm-icon"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+          <span class="alarm-text">0:00</span>
+          <button id="alarm-stop-btn">Parar</button>
+        </div>
       </div>
 
       </div>

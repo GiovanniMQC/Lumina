@@ -81,6 +81,37 @@ function vibrateIfEnabled(): void {
   } catch { /* silently fail */ }
 }
 
+let alarmIntervalId: number | undefined
+let activeAlarmTimerId: string | null = null
+
+function startAlarm(t: KitchenTimer): void {
+  if (alarmIntervalId) return // already ringing
+  activeAlarmTimerId = t.id
+
+  playAlertSound()
+  alarmIntervalId = window.setInterval(playAlertSound, 1500)
+  vibrateIfEnabled()
+
+  const banner = document.getElementById('alarm-banner')
+  const textEl = banner?.querySelector('.alarm-text')
+  if (textEl) textEl.textContent = msToDisplay(t.durationMs)
+  banner?.classList.remove('alarm-banner-hidden')
+}
+
+function stopAlarm(): void {
+  if (alarmIntervalId) {
+    clearInterval(alarmIntervalId)
+    alarmIntervalId = undefined
+  }
+  const banner = document.getElementById('alarm-banner')
+  banner?.classList.add('alarm-banner-hidden')
+
+  if (activeAlarmTimerId) {
+    removeTimer(activeAlarmTimerId)
+    activeAlarmTimerId = null
+  }
+}
+
 // ── Helpers ───────────────────────────────────────────────────────
 
 function generateId(): string {
@@ -231,8 +262,7 @@ function rafLoop(now: number): void {
       t.anchorTime  = null
       t.state       = 'done'
       t.alertFired  = true
-      playAlertSound()
-      vibrateIfEnabled()
+      startAlarm(t)
       renderAll()
       setSheetOpen(true)
     }
@@ -435,7 +465,7 @@ function updateSheetTitle(): void {
 
 // ── Sheet ─────────────────────────────────────────────────────────
 
-function setSheetOpen(open: boolean): void {
+export function setSheetOpen(open: boolean): void {
   _sheetOpen = open
   const sheet = document.getElementById('timer-sheet')
   sheet?.classList.toggle('sheet-open', open)
@@ -650,6 +680,9 @@ export function initTimers(): void {
   document.getElementById('timer-ctrl-toggle')?.addEventListener('click', toggleActive)
   document.getElementById('timer-ctrl-reset')?.addEventListener('click',  resetActive)
   document.getElementById('timer-ctrl-remove')?.addEventListener('click', removeActive)
+
+  // Alarm stop banner
+  document.getElementById('alarm-stop-btn')?.addEventListener('click', stopAlarm)
 
   // Overlay: click navigates to timers page
   document.getElementById('timer-overlay-player')?.addEventListener('click', () => navigateTo(3))

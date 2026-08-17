@@ -2,6 +2,8 @@
 //  navigation.ts — Sistema de páginas deslizantes (swipe)
 // ================================================================
 
+import { setSheetOpen } from './timers'
+
 let _currentPage  = 0
 let _totalPages   = 0
 let _wrapper: HTMLElement | null = null
@@ -57,6 +59,10 @@ export function navigateTo(page: number, animated = true): void {
   page = Math.max(0, Math.min(page, _totalPages - 1))
   const previousPage = _currentPage
   _currentPage = page
+
+  if (previousPage !== page) {
+    setSheetOpen(false)
+  }
 
   _wrapper.style.transition = animated
     ? 'transform 0.45s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
