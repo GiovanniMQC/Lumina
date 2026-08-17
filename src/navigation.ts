@@ -83,6 +83,12 @@ export function getCurrentPage(): number {
 // ── Touch handlers ────────────────────────────────────────────
 
 function onTouchStart(e: TouchEvent): void {
+  const target = e.target as HTMLElement
+  if (target.closest('.no-swipe')) {
+    _dragging = false
+    return
+  }
+
   _touchStartX  = e.touches[0].clientX
   _touchStartY  = e.touches[0].clientY
   _touchDeltaX  = 0
@@ -131,6 +137,12 @@ let _mouseStartX = 0
 let _mouseDragging = false
 
 function onMouseDown(e: MouseEvent): void {
+  const target = e.target as HTMLElement
+  if (target.closest('.no-swipe')) {
+    _mouseDragging = false
+    return
+  }
+
   _mouseStartX   = e.clientX
   _mouseDragging = true
   if (_wrapper) _wrapper.style.transition = 'none'

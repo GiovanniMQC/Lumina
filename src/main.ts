@@ -45,7 +45,7 @@ import {
 
 import { initClock }      from './clock'
 import { initNavigation } from './navigation'
-import { initWeather }    from './weather'
+import { initWeather, scrollWeatherToCurrentHour } from './weather'
 import { initFullscreen } from './fullscreen'
 import { initAmoled }     from './amoled'
 import { initUpdater }    from './updater'
@@ -315,6 +315,10 @@ async function bootstrap(): Promise<void> {
       startSlideshow()
     } else {
       stopSlideshow()
+    }
+
+    if (page === 2) {
+      scrollWeatherToCurrentHour(false)
     }
   })
 

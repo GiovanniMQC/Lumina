@@ -165,11 +165,14 @@
           <!-- Overlay de gradiente dependente do clima -->
           <div id="weather-bg-overlay"></div>
 
-          <!-- Relógio no canto do clima -->
-          <div id="weather-clock-widget">
-            <div id="weather-clock-time">--:--</div>
-            <div id="weather-clock-date">--- --, ----</div>
-          </div>
+          <!-- Wrapper de scroll para o conteúdo -->
+          <div id="weather-scroll-area">
+
+            <!-- Relógio no canto do clima -->
+            <div id="weather-clock-widget">
+              <div id="weather-clock-time">--:--</div>
+              <div id="weather-clock-date">--- --, ----</div>
+            </div>
 
           <div id="weather-content">
 
@@ -213,14 +216,26 @@
               </div>
             </div>
 
-            <!-- Previsão horária (scroll horizontal) -->
-            <div id="weather-hourly-wrapper">
-              <div id="weather-hourly">
-                <!-- preenchido pelo weather.ts -->
+            <!-- Previsão horária (scroll via botões para não interferir no swipe da página) -->
+            <div id="weather-hourly-container">
+              <button id="weather-hourly-prev" class="hourly-nav-btn" aria-label="Anterior">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg>
+              </button>
+              
+              <div id="weather-hourly-wrapper">
+                <div id="weather-hourly">
+                  <!-- preenchido pelo weather.ts -->
+                </div>
               </div>
+
+              <button id="weather-hourly-next" class="hourly-nav-btn" aria-label="Próximo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+              </button>
             </div>
 
           </div>
+
+          </div><!-- /weather-scroll-area -->
 
         </div><!-- /weather-page -->
 

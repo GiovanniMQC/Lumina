@@ -506,16 +506,47 @@ function renderWeather(d: WeatherData): void {
       `
     }).join('')
 
-    // Auto-scroll para a hora atual
+    // Aguarda um pequeno delay para garantir que os elementos foram renderizados
     setTimeout(() => {
-      const currentEl = hourlyEl.querySelector('.current-hour') as HTMLElement
-      if (currentEl && hourlyEl.parentElement) {
-        hourlyEl.parentElement.scrollTo({
-          left: currentEl.offsetLeft - (hourlyEl.parentElement.clientWidth / 2) + (currentEl.clientWidth / 2),
-          behavior: 'smooth'
-        })
-      }
+      scrollWeatherToCurrentHour(false)
+      updateHourlyScrollMask()
     }, 100)
+  }
+}
+
+function updateHourlyScrollMask(): void {
+  const wrapper = document.getElementById('weather-hourly-wrapper')
+  const prevBtn = document.getElementById('weather-hourly-prev')
+  const nextBtn = document.getElementById('weather-hourly-next')
+
+  if (!wrapper) return
+  const maxScroll = wrapper.scrollWidth - wrapper.clientWidth
+  const isStart = wrapper.scrollLeft <= 5
+  const isEnd = wrapper.scrollLeft >= maxScroll - 5
+
+  wrapper.classList.toggle('is-start', isStart)
+  wrapper.classList.toggle('is-end', isEnd)
+
+  if (prevBtn) {
+    prevBtn.style.opacity = isStart ? '0' : '1'
+    prevBtn.style.pointerEvents = isStart ? 'none' : 'auto'
+  }
+  if (nextBtn) {
+    nextBtn.style.opacity = isEnd ? '0' : '1'
+    nextBtn.style.pointerEvents = isEnd ? 'none' : 'auto'
+  }
+}
+
+export function scrollWeatherToCurrentHour(smooth = true): void {
+  const hourlyEl = document.getElementById('weather-hourly')
+  if (!hourlyEl || !hourlyEl.parentElement) return
+  
+  const currentEl = hourlyEl.querySelector('.current-hour') as HTMLElement
+  if (currentEl) {
+    hourlyEl.parentElement.scrollTo({
+      left: currentEl.offsetLeft - (hourlyEl.parentElement.clientWidth / 2) + (currentEl.clientWidth / 2),
+      behavior: smooth ? 'smooth' : 'auto'
+    })
   }
 }
 
@@ -541,6 +572,22 @@ export async function initWeather(): Promise<void> {
   const drawer = document.getElementById('weather-drawer')
   if (drawer) {
     drawer.addEventListener('click', () => drawer.classList.toggle('open'))
+  }
+
+  const hourlyWrapper = document.getElementById('weather-hourly-wrapper')
+  if (hourlyWrapper) {
+    hourlyWrapper.addEventListener('scroll', updateHourlyScrollMask, { passive: true })
+  }
+
+  const prevBtn = document.getElementById('weather-hourly-prev')
+  const nextBtn = document.getElementById('weather-hourly-next')
+
+  if (prevBtn && hourlyWrapper) {
+    prevBtn.addEventListener('click', () => hourlyWrapper.scrollBy({ left: -300, behavior: 'smooth' }))
+  }
+  
+  if (nextBtn && hourlyWrapper) {
+    nextBtn.addEventListener('click', () => hourlyWrapper.scrollBy({ left: 300, behavior: 'smooth' }))
   }
 
   const load = async () => {

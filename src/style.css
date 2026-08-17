@@ -1480,16 +1480,24 @@ body.no-karaoke .lyric-line.upcoming {
 #weather-page {
   display: flex;
   flex-direction: column;
+  position: relative;
+  /* needed for absolute canvas */
+}
+
+#weather-scroll-area {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
   padding: var(--space-xl);
   gap: var(--space-lg);
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
-  position: relative;
-  /* needed for absolute canvas */
+  z-index: 3;
 }
 
-#weather-page::-webkit-scrollbar {
+#weather-scroll-area::-webkit-scrollbar {
   display: none;
 }
 
@@ -1723,19 +1731,79 @@ body.no-karaoke .lyric-line.upcoming {
 }
 
 /* Prévisão horária — scroll horizontal com snap */
-#weather-hourly-wrapper {
-  overflow-x: auto;
-  overflow-y: hidden;
-  flex-shrink: 0;
+#weather-hourly-container {
+  display: flex;
+  align-items: center;
+  position: relative;
   margin-left: calc(-1 * var(--space-xl));
   margin-right: calc(-1 * var(--space-xl));
+}
+
+#weather-hourly-wrapper {
+  overflow-x: hidden; /* Changed from auto to hidden to allow page swiping */
+  overflow-y: hidden;
+  flex-shrink: 0;
+  width: 100%;
   padding: 12px var(--space-xl) var(--space-md);
   /* 12px top padding prevents glow/scale clipping */
-  -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
-  /* esconde a scrollbar mas permite rolar */
+  /* esconde a scrollbar mas permite rolar via botoes */
   scrollbar-width: none;
-  touch-action: pan-x;
+  touch-action: pan-y; /* changed from pan-x to allow vertical swipe to scroll page, horizontal triggers swipe */
+
+  /* Máscaras de fade nas bordas (removidas por JS via is-start / is-end) */
+  -webkit-mask-image: linear-gradient(to right, transparent, black var(--space-xl), black calc(100% - var(--space-xl)), transparent);
+  mask-image: linear-gradient(to right, transparent, black var(--space-xl), black calc(100% - var(--space-xl)), transparent);
+}
+
+.hourly-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  transition: opacity 0.3s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.hourly-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.hourly-nav-btn:active {
+  transform: translateY(-50%) scale(0.9);
+}
+
+#weather-hourly-prev {
+  left: var(--space-md);
+}
+
+#weather-hourly-next {
+  right: var(--space-md);
+}
+
+#weather-hourly-wrapper.is-start {
+  -webkit-mask-image: linear-gradient(to right, black, black calc(100% - var(--space-xl)), transparent);
+  mask-image: linear-gradient(to right, black, black calc(100% - var(--space-xl)), transparent);
+}
+
+#weather-hourly-wrapper.is-end {
+  -webkit-mask-image: linear-gradient(to right, transparent, black var(--space-xl), black);
+  mask-image: linear-gradient(to right, transparent, black var(--space-xl), black);
+}
+
+#weather-hourly-wrapper.is-start.is-end {
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 #weather-hourly-wrapper::-webkit-scrollbar {
@@ -1991,7 +2059,7 @@ body.no-karaoke .lyric-line.upcoming {
 
 /* --- Mobile Landscape / Telas muito baixas --- */
 @media (max-height: 500px) {
-  #weather-page {
+  #weather-scroll-area {
     padding-top: var(--space-md);
     padding-bottom: var(--space-md);
     gap: var(--space-sm);
@@ -2050,7 +2118,7 @@ body.no-karaoke .lyric-line.upcoming {
     font-size: clamp(3.5rem, 16vw, 4.5rem);
   }
 
-  #weather-page {
+  #weather-scroll-area {
     padding-top: var(--space-md);
     padding-left: var(--space-md);
     padding-right: var(--space-md);
@@ -2060,7 +2128,7 @@ body.no-karaoke .lyric-line.upcoming {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  #weather-page::-webkit-scrollbar {
+  #weather-scroll-area::-webkit-scrollbar {
     display: none;
   }
 
